@@ -1,8 +1,9 @@
 
-const express = require('express');
-const path = require('path');
-const { GoogleGenAI, Type } = require("@google/genai");
-const cors = require('cors');
+import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { GoogleGenAI, Type } from "@google/genai";
+import cors from 'cors';
 
 // This server will run in a secure environment where process.env.API_KEY is set.
 if (!process.env.API_KEY) {
@@ -165,16 +166,12 @@ IMPORTANT: Your entire response MUST be a single JSON object conforming to the p
         }
 
     } catch (error) {
-        // A more robust error handling to catch JSON parsing errors from the AI
         if (error instanceof SyntaxError) {
              console.error('Error parsing JSON from AI:', error.message);
-             // The response object might not have a .text property if the fetch itself failed before getting a response body.
-             // We can't safely access `error.text`, so we send a generic message.
              res.status(500).json({ error: 'The AI returned an invalid response format. Please try again.' });
         } else {
             console.error('Error in API handler:', error);
-            // Use standard JavaScript error handling, not TypeScript syntax.
-            res.status(500).json({ error: error.message || 'An internal server error occurred.' });
+            res.status(500).json({ error: (error as Error).message || 'An internal server error occurred.' });
         }
     }
 });
@@ -182,8 +179,12 @@ IMPORTANT: Your entire response MUST be a single JSON object conforming to the p
 
 // --- End of AI Logic ---
 
+// Get the directory name using ES module syntax
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+
 // Serve the static files from the 'dist' directory created by Vite's build process
-const __dirname = path.dirname(new URL(import.meta.url).pathname);
 app.use(express.static(path.join(__dirname, '..', 'dist')));
 
 // The "catchall" handler: for any request that doesn't match one above,

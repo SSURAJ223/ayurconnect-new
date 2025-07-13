@@ -15,9 +15,10 @@ export interface LifestyleSuggestion {
 }
 
 export interface MedicineAnalysisResult {
-  drugSummary: string;
-  herbSuggestions: HerbSuggestion[];
-  lifestyleSuggestions: LifestyleSuggestion[];
+  drugSummary?: string;
+  herbSuggestions?: HerbSuggestion[];
+  lifestyleSuggestions?: LifestyleSuggestion[];
+  error?: string;
 }
 
 export interface LabFindingAnalysis {

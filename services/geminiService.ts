@@ -9,6 +9,10 @@ interface LabInput {
   };
 }
 
+// !! IMPORTANT !!
+// The placeholder has been replaced with your live backend URL.
+const BACKEND_URL = 'https://ayurconnect-new-backend.onrender.com'; 
+
 /**
  * A helper function to call our secure backend proxy.
  * @param body The payload to send to the serverless function.
@@ -17,7 +21,7 @@ interface LabInput {
  */
 async function fetchFromApi(body: object) {
   try {
-    const response = await fetch('/api/gemini', {
+    const response = await fetch(`${BACKEND_URL}/api/gemini`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

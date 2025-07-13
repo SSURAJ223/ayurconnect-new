@@ -1,3 +1,4 @@
+
 const express = require('express');
 const path = require('path');
 const { GoogleGenAI, Type } = require("@google/genai");
@@ -48,7 +49,7 @@ const medicineSchema = {
                 type: Type.OBJECT,
                 properties: {
                     suggestion: { type: Type.STRING, description: "The lifestyle recommendation." },
-                    source: { type: Type.STRING, description: "The basis for the suggestion. E.g., 'Ayurvedic principles', 'General wellness'." }
+                    source: { type: Type.STRING, description: "The basis for the suggestion. E.g., 'Rasayana: Ayurvedic herbs for longevity and rejuvenation', 'Sushruta Samhita'." }
                 },
                 required: ["suggestion", "source"]
             }
@@ -88,7 +89,7 @@ const labReportSchema = {
                     type: Type.OBJECT,
                     properties: {
                         suggestion: { type: Type.STRING, description: "The lifestyle recommendation." },
-                        source: { type: Type.STRING, description: "The basis for the suggestion." }
+                        source: { type: Type.STRING, description: "The basis for the suggestion. E.g., 'Rasayana: Ayurvedic herbs for longevity and rejuvenation', 'Sushruta Samhita'." }
                     },
                     required: ["suggestion", "source"]
                 }
@@ -105,7 +106,7 @@ app.post('/api/gemini', async (req, res) => {
         const { type, ...data } = req.body;
 
         if (type === 'medicine') {
-            const prompt = `You are an expert AI assistant with deep knowledge in both allopathic medicine and Ayurveda. A user has provided the following allopathic medicine name: "${data.medicineName}". Your task is to provide a detailed analysis and complementary suggestions. Follow these instructions precisely: 1. Provide a brief, easy-to-understand summary of the allopathic drug. 2. Suggest 2-3 complementary Ayurvedic herbs. 3. Provide 2-3 relevant lifestyle suggestions based on Ayurvedic principles. IMPORTANT: Structure your entire response as a single JSON object that conforms to the provided schema. Do not add any text outside of the JSON object.`;
+            const prompt = `You are an expert AI assistant with deep knowledge in both allopathic medicine and Ayurveda. A user has provided the following allopathic medicine name: "${data.medicineName}". Your task is to provide a detailed analysis and complementary suggestions. Follow these instructions precisely: 1. Provide a brief, easy-to-understand summary of the allopathic drug. 2. Suggest 2-3 complementary Ayurvedic herbs. 3. Provide 2-3 relevant lifestyle suggestions based on the principles found in the books "Rasayana: Ayurvedic herbs for longevity and rejuvenation" by H.S. Puri and "Sushruta Samhita". When sourcing from these books, mention the book's title in the 'source' field of the lifestyle suggestion. IMPORTANT: Structure your entire response as a single JSON object that conforms to the provided schema. Do not add any text outside of the JSON object.`;
             const response = await ai.models.generateContent({
                 model: "gemini-2.5-flash",
                 contents: prompt,
@@ -114,7 +115,7 @@ app.post('/api/gemini', async (req, res) => {
             res.status(200).json(JSON.parse(response.text));
 
         } else if (type === 'lab') {
-            const systemInstruction = `You are an expert AI assistant specializing in analyzing medical lab reports from both an allopathic and Ayurvedic perspective. Your task is to analyze the provided lab report data (which can be text or an image). Follow these instructions carefully: 1. Identify key biomarkers in the report that are outside of the standard normal range. 2. For EACH biomarker that is out of range, create a distinct finding object. 3. If all biomarkers are within the normal range, return an empty array. 4. For each finding, provide a simple summary explaining what the result might indicate. 5. For each finding, suggest 1-2 complementary Ayurvedic herbs that could help bring the marker back to balance. 6. For each finding, suggest 1-2 relevant lifestyle modifications. IMPORTANT: Your response MUST be a single JSON array of finding objects that conforms to the provided schema. Do not include any text, greetings, or explanations outside of the JSON array.`;
+            const systemInstruction = `You are an expert AI assistant specializing in analyzing medical lab reports from both an allopathic and Ayurvedic perspective. Your task is to analyze the provided lab report data (which can be text or an image). Follow these instructions carefully: 1. Identify key biomarkers in the report that are outside of the standard normal range. 2. For EACH biomarker that is out of range, create a distinct finding object. 3. If all biomarkers are within the normal range, return an empty array. 4. For each finding, provide a simple summary explaining what the result might indicate. 5. For each finding, suggest 1-2 complementary Ayurvedic herbs that could help bring the marker back to balance. 6. For each finding, suggest 1-2 relevant lifestyle modifications based on the principles found in the books "Rasayana: Ayurvedic herbs for longevity and rejuvenation" by H.S. Puri and "Sushruta Samhita". When sourcing from these books, mention the book's title in the 'source' field of the lifestyle suggestion. IMPORTANT: Your response MUST be a single JSON array of finding objects that conforms to the provided schema. Do not include any text, greetings, or explanations outside of the JSON array.`;
             const parts = [];
             if (data.input.text) {
                 parts.push({ text: `Here is the lab report data:\n\n${data.input.text}` });

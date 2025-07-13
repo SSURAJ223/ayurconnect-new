@@ -1,3 +1,4 @@
+
 const express = require('express');
 const path = require('path');
 const { GoogleGenAI, Type } = require("@google/genai");
@@ -156,11 +157,11 @@ app.post('/api/gemini', async (req, res) => {
 // --- End of AI Logic ---
 
 
-// Serve the static files from the React app build directory
+// Serve the static files from the project root directory. This is the correct path.
 app.use(express.static(path.join(__dirname, '.')));
 
 // The "catchall" handler: for any request that doesn't match one above,
-// send back the index.html file. This is required for client-side routing.
+// send back the index.html file from the root.
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });

@@ -29,4 +29,7 @@ export interface LabFindingAnalysis {
   lifestyleSuggestions: LifestyleSuggestion[];
 }
 
-export type LabAnalysisResult = LabFindingAnalysis[];
+export interface LabAnalysisResult {
+  findings?: LabFindingAnalysis[];
+  error?: string;
+}

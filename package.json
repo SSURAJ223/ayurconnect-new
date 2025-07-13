@@ -1,5 +1,6 @@
+
 {
-  "name": "ayurconnect-ai-cloud-run",
+  "name": "ayurconnect-ai-backend",
   "version": "1.0.0",
   "description": "An AI-powered web application that bridges allopathic medicine and Ayurvedic wisdom.",
   "main": "server.js",

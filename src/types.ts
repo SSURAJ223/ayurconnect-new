@@ -1,3 +1,4 @@
+
 export interface HerbSuggestion {
   name: string;
   summary: string;
@@ -8,6 +9,8 @@ export interface HerbSuggestion {
 
 export interface LifestyleSuggestion {
   suggestion: string;
+  details: string;
+  duration: string;
   source: string;
 }
 

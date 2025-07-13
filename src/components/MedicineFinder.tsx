@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { getHerbSuggestionForMedicine } from '../services/geminiService';
 import type { MedicineAnalysisResult } from '../types';
@@ -17,7 +16,7 @@ const formatMedicineResultForSharing = (result: MedicineAnalysisResult | null): 
     text += `Drug Summary:\n${result.drugSummary}\n\n`;
   }
 
-  if (result.herbSuggestions?.length > 0) {
+  if (result.herbSuggestions?.length) {
     text += 'Complementary Herb Suggestions:\n';
     result.herbSuggestions.forEach(herb => {
       text += `- ${herb.name}:\n`;
@@ -27,7 +26,7 @@ const formatMedicineResultForSharing = (result: MedicineAnalysisResult | null): 
       text += `  Side Effects: ${herb.sideEffects}\n\n`;
     });
   }
-  if (result.lifestyleSuggestions?.length > 0) {
+  if (result.lifestyleSuggestions?.length) {
     text += 'Lifestyle Recommendations:\n';
     result.lifestyleSuggestions.forEach(item => {
       text += `- ${item.suggestion}:\n`;

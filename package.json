@@ -1,18 +1,29 @@
 
 {
-  "name": "ayurconnect-ai-backend",
+  "name": "ayurconnect-ai-app-final",
   "version": "1.0.0",
+  "type": "module",
   "description": "An AI-powered web application that bridges allopathic medicine and Ayurvedic wisdom.",
-  "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "node server.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@google/genai": "^1.9.0",
     "cors": "^2.8.5",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "typescript": "^5.4.5",
+    "vite": "^5.2.13"
   }
 }

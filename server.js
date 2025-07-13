@@ -1,6 +1,7 @@
-const express = require('express');
+onst express = require('express');
 const path = require('path');
 const { GoogleGenAI, Type } = require("@google/genai");
+const cors = require('cors');
 
 // This server will run in a secure environment where process.env.API_KEY is set.
 if (!process.env.API_KEY) {
@@ -10,6 +11,9 @@ if (!process.env.API_KEY) {
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 const app = express();
 const port = process.env.PORT || 8080;
+
+// Enable CORS for all routes. This is crucial for allowing cross-domain requests.
+app.use(cors());
 
 app.use(express.json({ limit: '50mb' })); // Use express's body parser for JSON
 
@@ -164,4 +168,3 @@ app.get('*', (req, res) => {
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
 });
-

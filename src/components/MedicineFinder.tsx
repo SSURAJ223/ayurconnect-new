@@ -18,26 +18,21 @@ const formatMedicineResultForSharing = (query: string, result: MedicineAnalysisR
     text += `Drug Summary:\n${result.drugSummary}\n\n`;
   }
 
-  if (result.herbSuggestions?.length) {
-    text += 'Complementary Herb Suggestions:\n';
-    result.herbSuggestions.forEach(herb => {
-      text += `- ${herb.name}:\n`;
-      text += `  Summary: ${herb.summary}\n`;
-      text += `  Dosage: ${herb.dosage}\n`;
-      text += `  Form: ${herb.form}\n`;
-      text += `  Side Effects: ${herb.sideEffects}\n\n`;
-    });
-  }
-  if (result.lifestyleSuggestions?.length) {
-    text += 'Lifestyle Recommendations:\n';
-    result.lifestyleSuggestions.forEach(item => {
-      text += `- ${item.suggestion}:\n`;
-      text += `  Details: ${item.details}\n`;
-      text += `  Duration: ${item.duration}\n`;
-      text += `  Source: ${item.source}\n\n`;
-    });
-  }
-  text += 'Disclaimer: This tool provides information for educational purposes only and is not a substitute for professional medical advice. Always consult with a qualified healthcare provider. More info at ' + window.location.href;
+  result.herbSuggestions?.forEach(herb => {
+    text += `🌿 ${herb.name}:\n`;
+    text += `   Summary: ${herb.summary}\n`;
+    text += `   Dosage: ${herb.dosage}\n`;
+    text += `   Form: ${herb.form}\n`;
+    text += `   Side Effects: ${herb.sideEffects}\n\n`;
+  });
+
+  result.lifestyleSuggestions?.forEach(item => {
+    text += `🧘 ${item.suggestion}:\n`;
+    text += `   Details: ${item.details}\n`;
+    text += `   Duration: ${item.duration}\n`;
+    text += `   Source: ${item.source}\n\n`;
+  });
+  text += 'Disclaimer: This tool provides information for educational purposes only and is not a substitute for professional medical advice. More info at ' + window.location.href;
   return text.trim();
 };
 
@@ -161,7 +156,7 @@ export const MedicineFinder: React.FC = () => {
               <h3 className="text-lg font-semibold text-gray-700">Analysis for: <span className="font-bold text-emerald-700">{submittedQuery}</span></h3>
               <div className="flex items-center gap-2">
                 {result && <ShareButton textToShare={formatMedicineResultForSharing(submittedQuery, result)} shareTitle={`AyurConnect AI: ${submittedQuery} Analysis`} />}
-                <button onClick={handleReset} className="text-sm text-gray-500 hover:text-gray-800">Start New</button>
+                <button onClick={handleReset} className="text-sm text-gray-500 hover:text-gray-800">Start New Analysis</button>
               </div>
             </div>
         )}

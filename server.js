@@ -121,8 +121,8 @@ app.post('/api/gemini', async (req, res) => {
             const prompt = `You are an expert AI assistant with deep knowledge in both allopathic medicine and Ayurveda. A user has provided the following allopathic medicine name: "${data.medicineName}".
 Your tasks are:
 1.  First, verify if "${data.medicineName}" is a recognized allopathic medicine or molecule name.
-2.  If the name is NOT valid or not recognized, your entire response MUST be a JSON object with only one key: "error", and its value should be a string like "The medicine name provided was not recognized. Please check the spelling and try again.". Do not include any other fields.
-3.  If the name IS valid, provide a detailed analysis. Your response MUST be a JSON object containing the 'drugSummary', 'herbSuggestions', and 'lifestyleSuggestions' fields, and the 'error' field must be null.
+2.  If the name is NOT valid or not recognized, your entire response MUST be a JSON object with only one key: "error". Its value should be a string like "The medicine name provided was not recognized. Please check the spelling and try again.". In this case, no other fields should be present in the JSON.
+3.  If the name IS valid, provide a detailed analysis. Your response MUST be a JSON object containing the 'drugSummary', 'herbSuggestions', and 'lifestyleSuggestions' fields. The 'error' field MUST be omitted entirely from the JSON object.
 4.  For 'lifestyleSuggestions', provide 2-3 relevant suggestions based on the principles found in the books "Rasayana: Ayurvedic herbs for longevity and rejuvenation" by H.S. Puri and "Sushruta Samhita". Each lifestyle suggestion must be specific and actionable, including quantifiable details (e.g., 'for 30 minutes daily') and a recommended duration (e.g., 'for at least 2 months'). You must cite the book's title in the 'source' field.
 
 IMPORTANT: Structure your entire response as a single JSON object that conforms to the provided schema. Do not add any text outside of the JSON object.`;
@@ -136,14 +136,14 @@ IMPORTANT: Structure your entire response as a single JSON object that conforms 
         } else if (type === 'lab') {
             const systemInstruction = `You are an expert AI assistant specializing in analyzing medical lab reports from both an allopathic and Ayurvedic perspective. Your task is to analyze the provided lab report data (which can be text or an image). Follow these instructions carefully:
 1. First, determine if the input contains recognizable lab report data (e.g., biomarkers like 'Cholesterol', 'Hemoglobin', 'TSH', with corresponding values and units).
-2. If no recognizable biomarkers are found, or if the input is clearly not a lab report (e.g., random words like 'cold', '123', 'test'), you MUST return an error.
-3. If the input is NOT a valid lab report, your entire response MUST be a JSON object with a single 'error' key and a null 'findings' key. The error message should be "The provided input does not appear to be a valid lab report. Please provide text or an image containing lab results."
-4. If the input IS a valid lab report, identify key biomarkers that are outside of the standard normal range.
-5. If all biomarkers are within the normal range, return a JSON object with an empty array for the 'findings' key and a null 'error' key, like so: {"findings": [], "error": null}.
+2. If no recognizable biomarkers are found, or if the input is clearly not a lab report (e.g., random words like 'cold', '123', 'test'), you MUST return a JSON object containing only the 'error' key. The value should be "The provided input does not appear to be a valid lab report. Please provide text or an image containing lab results.". The 'findings' key must be omitted.
+3. If the input IS a valid lab report, you must return a JSON object containing the 'findings' key. The 'error' key MUST be omitted.
+4. For the 'findings' key, identify key biomarkers that are outside of the standard normal range.
+5. If all biomarkers are within the normal range, the value for the 'findings' key should be an empty array (\`[]\`).
 6. For each out-of-range finding, provide a simple summary explaining what the result might indicate.
 7. For each finding, suggest 1-2 complementary Ayurvedic herbs that could help bring the marker back to balance.
 8. For each finding, suggest 1-2 relevant lifestyle modifications based on the principles found in the books "Rasayana: Ayurvedic herbs for longevity and rejuvenation" by H.S. Puri and "Sushruta Samhita". Each lifestyle suggestion must be specific and actionable, including quantifiable details (e.g., 'for 30 minutes daily') and a recommended duration (e.g., 'for at least 2 months'). You must cite the book's title in the 'source' field of the lifestyle suggestion.
-IMPORTANT: Your entire response MUST be a single JSON object conforming to the provided schema, containing either the 'findings' array or the 'error' message. Do not add any text, greetings, or explanations outside of the JSON object.`;
+IMPORTANT: Your entire response MUST be a single JSON object conforming to the provided schema. It must contain EITHER the 'findings' key (for a valid report) OR the 'error' key (for an invalid one), but not both. Do not add any text, greetings, or explanations outside of the JSON object.`;
             
             const parts = [];
             if (data.input.text) {
@@ -172,7 +172,8 @@ IMPORTANT: Your entire response MUST be a single JSON object conforming to the p
         } else {
             console.error('Error in API handler:', error);
             // Corrected line using standard JavaScript error handling.
-            res.status(500).json({ error: error.message || 'An internal server error occurred.' });
+            const errorMessage = (error instanceof Error) ? error.message : 'An internal server error occurred.';
+            res.status(500).json({ error: errorMessage });
         }
     }
 });

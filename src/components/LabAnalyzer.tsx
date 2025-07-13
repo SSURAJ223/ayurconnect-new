@@ -298,7 +298,7 @@ export const LabAnalyzer: React.FC = () => {
             className="w-full flex items-center justify-center px-6 py-3 bg-emerald-600 text-white font-semibold rounded-lg hover:bg-emerald-700 disabled:bg-gray-400 transition-colors duration-200"
           >
             {isLoading ? <Spinner /> : <ClipboardCheckIcon className="w-5 h-5 mr-2" />}
-            Analyze
+            Analyze and Find Ayurvedic Recommendations
           </button>
         </form>
         </>

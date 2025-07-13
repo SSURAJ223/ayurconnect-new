@@ -1,8 +1,17 @@
 {
-  "name": "ayurconnect-ai-vercel",
+  "name": "ayurconnect-ai-cloud-run",
   "version": "1.0.0",
   "description": "An AI-powered web application that bridges allopathic medicine and Ayurvedic wisdom.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
   "dependencies": {
-    "@google/genai": "^1.9.0"
+    "@google/genai": "^1.9.0",
+    "express": "^4.19.2",
+    "cors": "^2.8.5"
   }
 }

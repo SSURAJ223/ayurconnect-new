@@ -127,7 +127,7 @@ export const MedicineFinder: React.FC = () => {
       {!showResults && (
         <>
           <div>
-            <h2 className="text-xl font-bold text-gray-800">Find a Complementary Herb</h2>
+            <h2 className="text-xl font-bold text-gray-800">Find a Complementary Ayurvedic Herb</h2>
             <p className="text-gray-600 mt-1">
               Enter an allopathic medicine or molecule name to discover Ayurvedic herbs that can support your treatment.
             </p>
@@ -147,7 +147,7 @@ export const MedicineFinder: React.FC = () => {
               className="w-full sm:w-auto flex items-center justify-center px-6 py-3 bg-emerald-600 text-white font-semibold rounded-lg hover:bg-emerald-700 disabled:bg-gray-400 transition-colors duration-200"
             >
               {isLoading ? <Spinner /> : <SearchIcon className="w-5 h-5 mr-2" />}
-              Find Complementary Herb
+              Find Complementary Ayurvedic Herb
             </button>
           </form>
         </>

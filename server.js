@@ -171,7 +171,7 @@ IMPORTANT: Your entire response MUST be a single JSON object conforming to the p
              res.status(500).json({ error: 'The AI returned an invalid response format. Please try again.' });
         } else {
             console.error('Error in API handler:', error);
-            // This is the corrected line. No 'as Error' syntax.
+            // Corrected line using standard JavaScript error handling.
             res.status(500).json({ error: error.message || 'An internal server error occurred.' });
         }
     }

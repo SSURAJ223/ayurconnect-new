@@ -45,9 +45,11 @@ const formatLabResultForSharing = (results: LabAnalysisResult): string => {
       if (finding.lifestyleSuggestions?.length > 0) {
         text += '  Lifestyle Recommendations:\n';
         finding.lifestyleSuggestions.forEach(item => {
-          text += `  - ${item.suggestion} (Source: ${item.source})\n`;
+          text += `  - ${item.suggestion}:\n`;
+          text += `    Details: ${item.details}\n`;
+          text += `    Duration: ${item.duration}\n`;
+          text += `    Source: ${item.source}\n\n`;
         });
-        text += '\n';
       }
       if (index < results.length - 1) {
         text += '---\n\n';

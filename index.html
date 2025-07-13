@@ -10,20 +10,33 @@
       body {
         background-color: #f0fdf4; /* A very light green for the body background */
       }
+      .animate-fade-in {
+        animation: fadeIn 0.5s ease-in-out;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
     </style>
   <script type="importmap">
 {
   "imports": {
+    "express": "https://esm.sh/express@^5.1.0",
+    "path": "https://esm.sh/path@^0.12.7",
+    "url": "https://esm.sh/url@^0.11.4",
+    "@google/genai": "https://esm.sh/@google/genai@^1.9.0",
+    "cors": "https://esm.sh/cors@^2.8.5",
+    "vite": "https://esm.sh/vite@^7.0.4",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^4.6.0",
     "react": "https://esm.sh/react@^19.1.0",
     "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
-    "react/": "https://esm.sh/react@^19.1.0/",
-    "@google/genai": "https://esm.sh/@google/genai@^1.9.0"
+    "react/": "https://esm.sh/react@^19.1.0/"
   }
 }
 </script>
 </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
+    <script type="module" src="/src/index.tsx"></script>
   </body>
 </html>

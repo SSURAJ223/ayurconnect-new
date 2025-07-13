@@ -88,7 +88,6 @@ export const LabAnalyzer: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // Cleanup function to abort fetch on component unmount
     return () => {
       abortControllerRef.current?.abort();
     };
@@ -302,33 +301,35 @@ export const LabAnalyzer: React.FC = () => {
             Analyze
           </button>
         </form>
-        )}
+        </>
+      )}
       
       <div ref={resultsRef} aria-live="polite">
         {isLoading && <div className="text-center p-4"><p className="text-emerald-700">Analyzing report, please wait...</p></div>}
         
         {showResults && (
           <div className="space-y-6 animate-fade-in">
-              <div className="flex justify-between items-center mb-4 border-b pb-2">
-                <h3 className="text-lg font-semibold text-gray-700">Analysis For: <span className="font-bold text-emerald-700">{submittedQuery.fileName || 'Pasted Text'}</span></h3>
-                <div className="flex items-center gap-2">
-                  {result && <ShareButton textToShare={formatLabResultForSharing(submittedQuery, result)} shareTitle="AyurConnect AI: Lab Report Analysis" />}
-                   <button onClick={handleReset} className="text-sm text-gray-500 hover:text-gray-800">Start New</button>
-                </div>
+            <div className="flex justify-between items-center mb-4 border-b pb-2">
+              <h3 className="text-lg font-semibold text-gray-700">Analysis for: <span className="font-bold text-emerald-700">{submittedQuery?.fileName || 'Pasted Text'}</span></h3>
+              <div className="flex items-center gap-2">
+                {result && <ShareButton textToShare={formatLabResultForSharing(submittedQuery!, result)} shareTitle="AyurConnect AI: Lab Report Analysis" />}
+                 <button onClick={handleReset} className="text-sm text-gray-500 hover:text-gray-800">Start New</button>
               </div>
+            </div>
 
-              {submittedQuery.text && (
-                <div className="bg-gray-50 p-3 rounded-md text-sm text-gray-600 whitespace-pre-wrap font-mono">
-                  {submittedQuery.text}
-                </div>
-              )}
+            {submittedQuery?.text && (
+              <div className="bg-gray-50 p-3 rounded-md text-sm text-gray-600 whitespace-pre-wrap font-mono">
+                {submittedQuery.text}
+              </div>
+            )}
 
-              {error && <div className="text-red-600 bg-red-100 p-3 rounded-lg mt-4">{error}</div>}
+            {error && <div className="text-red-600 bg-red-100 p-3 rounded-lg mt-4">{error}</div>}
 
-              {result && result.findings && (
-                <div className="mt-4 space-y-6">
-                  {result.findings.length > 0 ? (
-                    result.findings.map((finding, index) => (
+            {result && (
+              <>
+                {result.findings && result.findings.length > 0 && (
+                  <div className="mt-4 space-y-6">
+                    {result.findings.map((finding, index) => (
                       <div key={index} className="bg-green-50 p-5 rounded-xl border border-green-200">
                         <div className="flex items-start mb-3">
                           <AlertTriangleIcon className="w-6 h-6 text-orange-500 mr-3 mt-1 flex-shrink-0" />
@@ -359,14 +360,16 @@ export const LabAnalyzer: React.FC = () => {
                           )}
                         </div>
                       </div>
-                    ))
-                  ) : (
-                    <div className="bg-green-100 text-green-800 p-4 rounded-lg text-center mt-4">
-                      <p>Based on the provided data, all markers appear to be within normal ranges. No specific herb suggestions are needed at this time.</p>
-                    </div>
-                  )}
-                </div>
-              )}
+                    ))}
+                  </div>
+                )}
+                {result.findings && result.findings.length === 0 && !result.error &&(
+                  <div className="bg-green-100 text-green-800 p-4 rounded-lg text-center mt-4">
+                    <p>Based on the provided data, all markers appear to be within normal ranges. No specific herb suggestions are needed at this time.</p>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         )}
       </div>

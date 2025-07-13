@@ -1,4 +1,4 @@
-onst express = require('express');
+const express = require('express');
 const path = require('path');
 const { GoogleGenAI, Type } = require("@google/genai");
 const cors = require('cors');

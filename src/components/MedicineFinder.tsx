@@ -8,10 +8,15 @@ import { SearchIcon } from './icons/SearchIcon';
 import { LifestyleCard } from './LifestyleCard';
 import { ShareButton } from './ShareButton';
 
-const formatMedicineResultForSharing = (result: MedicineAnalysisResult): string => {
-  if (!result) return '';
+const formatMedicineResultForSharing = (result: MedicineAnalysisResult | null): string => {
+  if (!result || result.error) return 'AyurConnect AI could not provide an analysis for the entered medicine name.';
+  
   let text = `AyurConnect AI Analysis\n------------------------\n\n`;
-  text += `Drug Summary:\n${result.drugSummary}\n\n`;
+  
+  if(result.drugSummary) {
+    text += `Drug Summary:\n${result.drugSummary}\n\n`;
+  }
+
   if (result.herbSuggestions?.length > 0) {
     text += 'Complementary Herb Suggestions:\n';
     result.herbSuggestions.forEach(herb => {
@@ -43,10 +48,10 @@ export const MedicineFinder: React.FC = () => {
   const resultsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (result) {
+    if (result || error) {
       resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
-  }, [result]);
+  }, [result, error]);
 
   const handleSubmit = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,10 +65,18 @@ export const MedicineFinder: React.FC = () => {
 
     try {
       const analysis = await getHerbSuggestionForMedicine(medicineName);
-      setResult(analysis);
+      if (analysis && analysis.error) {
+        setError(analysis.error);
+        setResult(null);
+      } else if (analysis && analysis.drugSummary) {
+        setResult(analysis);
+      } else {
+        setError('An unexpected error occurred. The AI did not return a valid analysis. Please try again.');
+        setResult(null);
+      }
       setMedicineName('');
     } catch (err) {
-      setError('Failed to get suggestion. Please check your connection or try again later.');
+      setError((err as Error).message || 'Failed to get suggestion. Please check your connection or try again later.');
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -97,46 +110,50 @@ export const MedicineFinder: React.FC = () => {
         </button>
       </form>
       
-      {error && <div className="text-red-600 bg-red-100 p-3 rounded-lg">{error}</div>}
+      <div ref={resultsRef}>
+        {error && <div className="text-red-600 bg-red-100 p-3 rounded-lg animate-fade-in">{error}</div>}
 
-      {isLoading && <div className="text-center p-4"><p className="text-emerald-700">Analyzing, please wait...</p></div>}
+        {isLoading && <div className="text-center p-4"><p className="text-emerald-700">Analyzing, please wait...</p></div>}
 
-      {result && (
-        <div className="space-y-6 animate-fade-in" ref={resultsRef}>
-          <div className="flex justify-between items-center mb-2">
-             <h3 className="text-lg font-semibold text-gray-700">Analysis Result:</h3>
-             <ShareButton textToShare={formatMedicineResultForSharing(result)} shareTitle="AyurConnect AI: Medicine Analysis" />
-          </div>
-
-          <div>
-            <h3 className="text-lg font-semibold text-gray-700 mb-2">Drug Summary:</h3>
-            <p className="bg-green-50 p-4 rounded-lg text-gray-800">{result.drugSummary}</p>
-          </div>
-          
-          {result.herbSuggestions.length > 0 && (
-            <div>
-              <h3 className="text-lg font-semibold text-gray-700 mb-2">Complementary Herb Suggestions:</h3>
-              <div className="space-y-4">
-                {result.herbSuggestions.map((suggestion, index) => (
-                  <ResultCard key={index} suggestion={suggestion} />
-                ))}
-              </div>
+        {result && (
+          <div className="space-y-6 animate-fade-in">
+            <div className="flex justify-between items-center mb-2">
+              <h3 className="text-lg font-semibold text-gray-700">Analysis Result:</h3>
+              <ShareButton textToShare={formatMedicineResultForSharing(result)} shareTitle="AyurConnect AI: Medicine Analysis" />
             </div>
-          )}
 
-          {result.lifestyleSuggestions && result.lifestyleSuggestions.length > 0 && (
-            <div>
-              <h3 className="text-lg font-semibold text-gray-700 mb-2">Lifestyle Recommendations:</h3>
-              <div className="space-y-3">
-                {result.lifestyleSuggestions.map((suggestion, index) => (
-                  <LifestyleCard key={index} suggestion={suggestion} />
-                ))}
+            {result.drugSummary && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">Drug Summary:</h3>
+                <p className="bg-green-50 p-4 rounded-lg text-gray-800">{result.drugSummary}</p>
               </div>
-            </div>
-          )}
+            )}
+            
+            {result.herbSuggestions && result.herbSuggestions.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">Complementary Herb Suggestions:</h3>
+                <div className="space-y-4">
+                  {result.herbSuggestions.map((suggestion, index) => (
+                    <ResultCard key={index} suggestion={suggestion} />
+                  ))}
+                </div>
+              </div>
+            )}
 
-        </div>
-      )}
+            {result.lifestyleSuggestions && result.lifestyleSuggestions.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-700 mb-2">Lifestyle Recommendations:</h3>
+                <div className="space-y-3">
+                  {result.lifestyleSuggestions.map((suggestion, index) => (
+                    <LifestyleCard key={index} suggestion={suggestion} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+          </div>
+        )}
+      </div>
     </div>
   );
 };

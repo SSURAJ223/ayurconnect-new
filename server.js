@@ -1,17 +1,21 @@
 
-const express = require('express');
-const path = require('path');
-const { GoogleGenAI, Type } = require("@google/genai");
-const cors = require('cors');
+import express from 'express';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { GoogleGenAI, Type } from "@google/genai";
+import cors from 'cors';
 
 // This server will run in a secure environment where process.env.API_KEY is set.
 if (!process.env.API_KEY) {
     throw new Error("API_KEY environment variable is not set.");
 }
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 const app = express();
-const port = process.env.PORT || 8080;
+const port = process.env.PORT || 10000;
 
 // Enable CORS for all routes. This is crucial for allowing cross-domain requests.
 app.use(cors());
@@ -112,7 +116,6 @@ app.post('/api/gemini', async (req, res) => {
                 contents: prompt,
                 config: { responseMimeType: "application/json", responseSchema: medicineSchema },
             });
-            // The response text is a JSON string, parse it into an object for the client.
             res.status(200).json(JSON.parse(response.text));
 
         } else if (type === 'lab') {
@@ -132,11 +135,9 @@ app.post('/api/gemini', async (req, res) => {
             });
 
             const responseText = response.text.trim();
-            // Handle cases where the model returns an empty string for "all clear" reports
             if (responseText === "" || responseText === "[]") {
                 res.status(200).json([]);
             } else {
-                 // The response text is a JSON string, parse it into an object for the client.
                 res.status(200).json(JSON.parse(responseText));
             }
         } else {
@@ -156,14 +157,13 @@ app.post('/api/gemini', async (req, res) => {
 
 // --- End of AI Logic ---
 
-
-// Serve the static files from the project root directory. This is the correct path.
-app.use(express.static(path.join(__dirname, '.')));
+// Serve the static files from the 'dist' directory created by Vite
+app.use(express.static(path.join(__dirname, 'dist')));
 
 // The "catchall" handler: for any request that doesn't match one above,
-// send back the index.html file from the root.
+// send back the index.html file from the 'dist' directory.
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'index.html'));
+  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
 app.listen(port, () => {

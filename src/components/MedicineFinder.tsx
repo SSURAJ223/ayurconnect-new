@@ -25,9 +25,11 @@ const formatMedicineResultForSharing = (result: MedicineAnalysisResult): string 
   if (result.lifestyleSuggestions?.length > 0) {
     text += 'Lifestyle Recommendations:\n';
     result.lifestyleSuggestions.forEach(item => {
-      text += `- ${item.suggestion} (Source: ${item.source})\n`;
+      text += `- ${item.suggestion}:\n`;
+      text += `  Details: ${item.details}\n`;
+      text += `  Duration: ${item.duration}\n`;
+      text += `  Source: ${item.source}\n\n`;
     });
-    text += '\n';
   }
   text += 'Disclaimer: This tool provides information for educational purposes only and is not a substitute for professional medical advice. Always consult with a qualified healthcare provider.';
   return text.trim();

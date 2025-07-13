@@ -36,11 +36,11 @@ const medicineSchema = {
     properties: {
         drugSummary: {
             type: Type.STRING,
-            description: "A brief summary of the allopathic drug, its uses, and mechanism of action."
+            description: "A brief summary of the allopathic drug, its uses, and mechanism of action. This field should be present and populated only if the medicine name is valid."
         },
         herbSuggestions: {
             type: Type.ARRAY,
-            description: "A list of suggested complementary Ayurvedic herbs.",
+            description: "A list of suggested complementary Ayurvedic herbs. This field should be present only if the medicine name is valid.",
             items: {
                 type: Type.OBJECT,
                 properties: {
@@ -55,11 +55,14 @@ const medicineSchema = {
         },
         lifestyleSuggestions: {
             type: Type.ARRAY,
-            description: "A list of suggested lifestyle changes (diet, exercise, etc.) that complement the treatment.",
+            description: "A list of suggested lifestyle changes (diet, exercise, etc.) that complement the treatment. This field should be present only if the medicine name is valid.",
             items: lifestyleSuggestionSchema
+        },
+        error: {
+          type: Type.STRING,
+          description: "An error message to be returned ONLY if the provided medicine name is not recognized or is invalid. In this case, this should be the ONLY field in the response. If the name is valid, this field must be null."
         }
     },
-    required: ["drugSummary", "herbSuggestions", "lifestyleSuggestions"]
 };
 
 const labReportSchema = {
@@ -103,7 +106,14 @@ app.post('/api/gemini', async (req, res) => {
         const { type, ...data } = req.body;
 
         if (type === 'medicine') {
-            const prompt = `You are an expert AI assistant with deep knowledge in both allopathic medicine and Ayurveda. A user has provided the following allopathic medicine name: "${data.medicineName}". Your task is to provide a detailed analysis and complementary suggestions. Follow these instructions precisely: 1. Provide a brief, easy-to-understand summary of the allopathic drug. 2. Suggest 2-3 complementary Ayurvedic herbs. 3. Provide 2-3 relevant lifestyle suggestions based on the principles found in the books "Rasayana: Ayurvedic herbs for longevity and rejuvenation" by H.S. Puri and "Sushruta Samhita". Each lifestyle suggestion must be specific and actionable, including quantifiable details (e.g., 'for 30 minutes daily') and a recommended duration (e.g., 'for at least 2 months'). When sourcing from these books, you must cite the book's title in the 'source' field of the lifestyle suggestion. IMPORTANT: Structure your entire response as a single JSON object that conforms to the provided schema. Do not add any text outside of the JSON object.`;
+            const prompt = `You are an expert AI assistant with deep knowledge in both allopathic medicine and Ayurveda. A user has provided the following allopathic medicine name: "${data.medicineName}".
+Your tasks are:
+1.  First, verify if "${data.medicineName}" is a recognized allopathic medicine or molecule name.
+2.  If the name is NOT valid or not recognized, your entire response MUST be a JSON object with only one key: "error", and its value should be a string like "The medicine name provided was not recognized. Please check the spelling and try again.". Do not include any other fields.
+3.  If the name IS valid, provide a detailed analysis. Your response MUST be a JSON object containing the 'drugSummary', 'herbSuggestions', and 'lifestyleSuggestions' fields, and the 'error' field must be null.
+4.  For 'lifestyleSuggestions', provide 2-3 relevant suggestions based on the principles found in the books "Rasayana: Ayurvedic herbs for longevity and rejuvenation" by H.S. Puri and "Sushruta Samhita". Each lifestyle suggestion must be specific and actionable, including quantifiable details (e.g., 'for 30 minutes daily') and a recommended duration (e.g., 'for at least 2 months'). You must cite the book's title in the 'source' field.
+
+IMPORTANT: Structure your entire response as a single JSON object that conforms to the provided schema. Do not add any text outside of the JSON object.`;
             const response = await ai.models.generateContent({
                 model: "gemini-2.5-flash",
                 contents: prompt,

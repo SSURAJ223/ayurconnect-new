@@ -65,39 +65,50 @@ const medicineSchema = {
     },
 };
 
-const labReportSchema = {
-    type: Type.ARRAY,
-    description: "An array of findings from the lab report analysis. If all markers are normal, return an empty array.",
-    items: {
-        type: Type.OBJECT,
-        properties: {
-            parameter: { type: Type.STRING, description: "The name of the lab marker that is out of range, e.g., 'Total Cholesterol'." },
-            status: { type: Type.STRING, description: "The status of the marker, e.g., 'High', 'Low'." },
-            summary: { type: Type.STRING, description: "A brief summary explaining the implication of this finding." },
-            herbSuggestions: {
-                type: Type.ARRAY,
-                description: "A list of suggested complementary Ayurvedic herbs for this specific finding.",
-                items: {
-                    type: Type.OBJECT,
-                    properties: {
-                        name: { type: Type.STRING, description: "Name of the Ayurvedic herb." },
-                        summary: { type: Type.STRING, description: "Summary of the herb's benefits related to the finding." },
-                        dosage: { type: Type.STRING, description: "Recommended dosage." },
-                        form: { type: Type.STRING, description: "Common form of consumption." },
-                        sideEffects: { type: Type.STRING, description: "Potential side effects or precautions." }
-                    },
-                    required: ["name", "summary", "dosage", "form", "sideEffects"]
-                }
-            },
-            lifestyleSuggestions: {
-                type: Type.ARRAY,
-                description: "A list of suggested lifestyle changes for this specific finding.",
-                items: lifestyleSuggestionSchema
+const labReportFindingSchema = {
+    type: Type.OBJECT,
+    properties: {
+        parameter: { type: Type.STRING, description: "The name of the lab marker that is out of range, e.g., 'Total Cholesterol'." },
+        status: { type: Type.STRING, description: "The status of the marker, e.g., 'High', 'Low'." },
+        summary: { type: Type.STRING, description: "A brief summary explaining the implication of this finding." },
+        herbSuggestions: {
+            type: Type.ARRAY,
+            description: "A list of suggested complementary Ayurvedic herbs for this specific finding.",
+            items: {
+                type: Type.OBJECT,
+                properties: {
+                    name: { type: Type.STRING, description: "Name of the Ayurvedic herb." },
+                    summary: { type: Type.STRING, description: "Summary of the herb's benefits related to the finding." },
+                    dosage: { type: Type.STRING, description: "Recommended dosage." },
+                    form: { type: Type.STRING, description: "Common form of consumption." },
+                    sideEffects: { type: Type.STRING, description: "Potential side effects or precautions." }
+                },
+                required: ["name", "summary", "dosage", "form", "sideEffects"]
             }
         },
-        required: ["parameter", "status", "summary", "herbSuggestions", "lifestyleSuggestions"]
-    }
+        lifestyleSuggestions: {
+            type: Type.ARRAY,
+            description: "A list of suggested lifestyle changes for this specific finding.",
+            items: lifestyleSuggestionSchema
+        }
+    },
+    required: ["parameter", "status", "summary", "herbSuggestions", "lifestyleSuggestions"]
 };
+
+const labReportResponseSchema = {
+    type: Type.OBJECT,
+    properties: {
+        findings: {
+            type: Type.ARRAY,
+            description: "An array of finding objects, one for each out-of-range biomarker. This field must be null if the input is not a valid lab report or if no biomarkers are found.",
+            items: labReportFindingSchema
+        },
+        error: {
+            type: Type.STRING,
+            description: "An error message to be returned ONLY if the provided text or image does not appear to contain recognizable lab report data. If recognizable data is present, this field must be null."
+        }
+    }
+}
 
 
 // API endpoint for all Gemini calls
@@ -122,10 +133,20 @@ IMPORTANT: Structure your entire response as a single JSON object that conforms 
             res.status(200).json(JSON.parse(response.text));
 
         } else if (type === 'lab') {
-            const systemInstruction = `You are an expert AI assistant specializing in analyzing medical lab reports from both an allopathic and Ayurvedic perspective. Your task is to analyze the provided lab report data (which can be text or an image). Follow these instructions carefully: 1. Identify key biomarkers in the report that are outside of the standard normal range. 2. For EACH biomarker that is out of range, create a distinct finding object. 3. If all biomarkers are within the normal range, return an empty array. 4. For each finding, provide a simple summary explaining what the result might indicate. 5. For each finding, suggest 1-2 complementary Ayurvedic herbs that could help bring the marker back to balance. 6. For each finding, suggest 1-2 relevant lifestyle modifications based on the principles found in the books "Rasayana: Ayurvedic herbs for longevity and rejuvenation" by H.S. Puri and "Sushruta Samhita". Each lifestyle suggestion must be specific and actionable, including quantifiable details (e.g., 'for 30 minutes daily') and a recommended duration (e.g., 'for at least 2 months'). When sourcing from these books, you must cite the book's title in the 'source' field of the lifestyle suggestion. IMPORTANT: Your response MUST be a single JSON array of finding objects that conforms to the provided schema. Do not include any text, greetings, or explanations outside of the JSON array.`;
+            const systemInstruction = `You are an expert AI assistant specializing in analyzing medical lab reports from both an allopathic and Ayurvedic perspective. Your task is to analyze the provided lab report data (which can be text or an image). Follow these instructions carefully:
+1. First, determine if the input contains recognizable lab report data (e.g., biomarkers like 'Cholesterol', 'Hemoglobin', 'TSH', with corresponding values and units). If no recognizable biomarkers are found, you MUST return an error.
+2. If the input is NOT a valid lab report, your entire response MUST be a JSON object with a single 'error' key and a null 'findings' key. The error message should be "The provided input does not appear to be a valid lab report. Please provide text or an image containing lab results."
+3. If the input IS a valid lab report, identify key biomarkers that are outside of the standard normal range.
+4. For EACH biomarker that is out of range, create a distinct finding object.
+5. If all biomarkers are within the normal range, return a JSON object with an empty array for the 'findings' key and a null 'error' key, like so: {"findings": [], "error": null}.
+6. For each out-of-range finding, provide a simple summary explaining what the result might indicate.
+7. For each finding, suggest 1-2 complementary Ayurvedic herbs that could help bring the marker back to balance.
+8. For each finding, suggest 1-2 relevant lifestyle modifications based on the principles found in the books "Rasayana: Ayurvedic herbs for longevity and rejuvenation" by H.S. Puri and "Sushruta Samhita". Each lifestyle suggestion must be specific and actionable, including quantifiable details (e.g., 'for 30 minutes daily') and a recommended duration (e.g., 'for at least 2 months'). You must cite the book's title in the 'source' field of the lifestyle suggestion.
+IMPORTANT: Your entire response MUST be a single JSON object conforming to the provided schema, containing either the 'findings' array or the 'error' message. Do not add any text, greetings, or explanations outside of the JSON object.`;
+            
             const parts = [];
             if (data.input.text) {
-                parts.push({ text: `Here is the lab report data:\n\n${data.input.text}` });
+                parts.push({ text: `Analyze the following lab report data:\n\n${data.input.text}` });
             }
             if (data.input.image) {
                 parts.push({ inlineData: data.input.image });
@@ -134,22 +155,19 @@ IMPORTANT: Structure your entire response as a single JSON object that conforms 
             const response = await ai.models.generateContent({
                 model: "gemini-2.5-flash",
                 contents: { parts },
-                config: { responseMimeType: "application/json", responseSchema: labReportSchema, systemInstruction },
+                config: { responseMimeType: "application/json", responseSchema: labReportResponseSchema, systemInstruction },
             });
+            
+            res.status(200).json(JSON.parse(response.text));
 
-            const responseText = response.text.trim();
-            if (responseText === "" || responseText === "[]") {
-                res.status(200).json([]);
-            } else {
-                res.status(200).json(JSON.parse(responseText));
-            }
         } else {
             res.status(400).json({ error: 'Invalid request type' });
         }
 
     } catch (error) {
         if (error instanceof SyntaxError) {
-             console.error('Error parsing JSON from AI:', error);
+             console.error('Error parsing JSON from AI:', error.message);
+             console.error('Faulty AI response text:', error.text);
              res.status(500).json({ error: 'The AI returned an invalid response format. Please try again.' });
         } else {
             console.error('Error in API handler:', error);

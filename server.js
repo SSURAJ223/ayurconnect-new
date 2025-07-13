@@ -134,10 +134,10 @@ IMPORTANT: Structure your entire response as a single JSON object that conforms 
 
         } else if (type === 'lab') {
             const systemInstruction = `You are an expert AI assistant specializing in analyzing medical lab reports from both an allopathic and Ayurvedic perspective. Your task is to analyze the provided lab report data (which can be text or an image). Follow these instructions carefully:
-1. First, determine if the input contains recognizable lab report data (e.g., biomarkers like 'Cholesterol', 'Hemoglobin', 'TSH', with corresponding values and units). If no recognizable biomarkers are found, you MUST return an error.
-2. If the input is NOT a valid lab report, your entire response MUST be a JSON object with a single 'error' key and a null 'findings' key. The error message should be "The provided input does not appear to be a valid lab report. Please provide text or an image containing lab results."
-3. If the input IS a valid lab report, identify key biomarkers that are outside of the standard normal range.
-4. For EACH biomarker that is out of range, create a distinct finding object.
+1. First, determine if the input contains recognizable lab report data (e.g., biomarkers like 'Cholesterol', 'Hemoglobin', 'TSH', with corresponding values and units).
+2. If no recognizable biomarkers are found, or if the input is clearly not a lab report (e.g., random words like 'cold', '123', 'test'), you MUST return an error.
+3. If the input is NOT a valid lab report, your entire response MUST be a JSON object with a single 'error' key and a null 'findings' key. The error message should be "The provided input does not appear to be a valid lab report. Please provide text or an image containing lab results."
+4. If the input IS a valid lab report, identify key biomarkers that are outside of the standard normal range.
 5. If all biomarkers are within the normal range, return a JSON object with an empty array for the 'findings' key and a null 'error' key, like so: {"findings": [], "error": null}.
 6. For each out-of-range finding, provide a simple summary explaining what the result might indicate.
 7. For each finding, suggest 1-2 complementary Ayurvedic herbs that could help bring the marker back to balance.
@@ -165,31 +165,36 @@ IMPORTANT: Your entire response MUST be a single JSON object conforming to the p
         }
 
     } catch (error) {
+        // A more robust error handling to catch JSON parsing errors from the AI
         if (error instanceof SyntaxError) {
              console.error('Error parsing JSON from AI:', error.message);
-             console.error('Faulty AI response text:', error.text);
+             // The response object might not have a .text property if the fetch itself failed before getting a response body.
+             // We can't safely access `error.text`, so we send a generic message.
              res.status(500).json({ error: 'The AI returned an invalid response format. Please try again.' });
         } else {
             console.error('Error in API handler:', error);
-            res.status(500).json({ error: error.message || 'An internal server error occurred.' });
+            res.status(500).json({ error: (error as Error).message || 'An internal server error occurred.' });
         }
     }
 });
 
+
 // --- End of AI Logic ---
 
 // Serve the static files from the 'dist' directory created by Vite's build process
-app.use(express.static(path.join(__dirname, 'dist')));
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
+app.use(express.static(path.join(__dirname, '..', 'dist')));
 
 // The "catchall" handler: for any request that doesn't match one above,
 // send back the index.html file from the 'dist' directory.
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'), (err) => {
+  res.sendFile(path.join(__dirname, '..', 'dist', 'index.html'), (err) => {
     if (err) {
       res.status(500).send(err);
     }
   });
 });
+
 
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`);

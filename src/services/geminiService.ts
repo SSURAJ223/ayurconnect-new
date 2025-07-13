@@ -10,7 +10,9 @@ interface LabInput {
   };
 }
 
-const BACKEND_URL = 'https://ayurconnect-new-backend.onrender.com'; 
+// In a production environment, this should be an environment variable.
+// For this project, we hardcode it since it's a known, single backend.
+const BACKEND_URL = 'https://ayurconnect-new-backend.onrender.com';
 
 /**
  * A helper function to call our secure backend proxy.

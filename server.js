@@ -1,17 +1,12 @@
-
-import express from 'express';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { GoogleGenAI, Type } from "@google/genai";
-import cors from 'cors';
+const express = require('express');
+const path = require('path');
+const { GoogleGenAI, Type } = require("@google/genai");
+const cors = require('cors');
 
 // This server will run in a secure environment where process.env.API_KEY is set.
 if (!process.env.API_KEY) {
     throw new Error("API_KEY environment variable is not set.");
 }
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 const app = express();

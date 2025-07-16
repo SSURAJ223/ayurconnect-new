@@ -1,7 +1,6 @@
-
 import React from 'react';
 import type { LifestyleSuggestion } from '../types';
-import { BookOpenIcon } from './icons/BookOpenIcon';
+import { BookOpenIcon } from './icons';
 
 interface LifestyleCardProps {
   suggestion: LifestyleSuggestion;

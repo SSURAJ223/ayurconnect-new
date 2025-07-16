@@ -1,5 +1,5 @@
 
-import type { MedicineAnalysisResult, LabAnalysisResult } from '../types';
+import type { MedicineAnalysisResult, LabAnalysisResult, UserProfile } from '../types';
 
 // This interface defines the expected structure for lab report submissions to our backend.
 interface LabInput {
@@ -53,13 +53,15 @@ async function fetchFromApi(body: object, signal: AbortSignal) {
 /**
  * Sends a request to our backend to get herb suggestions for a medicine.
  * @param medicineName The name of the medicine to analyze.
+ * @param profile The user's profile data for personalization.
  * @param signal The AbortSignal for the request.
  * @returns A promise that resolves to the medicine analysis result.
  */
-export async function getHerbSuggestionForMedicine(medicineName: string, signal: AbortSignal): Promise<MedicineAnalysisResult | null> {
+export async function getHerbSuggestionForMedicine(medicineName: string, profile: UserProfile, signal: AbortSignal): Promise<MedicineAnalysisResult | null> {
   return fetchFromApi({
     type: 'medicine',
     medicineName,
+    profile,
   }, signal);
 }
 
@@ -67,12 +69,14 @@ export async function getHerbSuggestionForMedicine(medicineName: string, signal:
 /**
  * Sends a request to our backend to analyze a lab report.
  * @param input An object containing either text or image data for the lab report.
+ * @param profile The user's profile data for personalization.
  * @param signal The AbortSignal for the request.
  * @returns A promise that resolves to the lab analysis result.
  */
-export async function analyzeLabReport(input: LabInput, signal: AbortSignal): Promise<LabAnalysisResult | null> {
+export async function analyzeLabReport(input: LabInput, profile: UserProfile, signal: AbortSignal): Promise<LabAnalysisResult | null> {
    return fetchFromApi({
     type: 'lab',
     input,
+    profile,
   }, signal);
 }

@@ -14,6 +14,12 @@ export interface LifestyleSuggestion {
   source: string;
 }
 
+export interface UserProfile {
+  age?: number;
+  gender?: string;
+  allergies?: string;
+}
+
 export interface MedicineAnalysisResult {
   drugSummary?: string;
   herbSuggestions?: HerbSuggestion[];

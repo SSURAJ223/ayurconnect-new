@@ -3,14 +3,29 @@ import React, { useState } from 'react';
 import { Header } from './components/Header';
 import { MedicineFinder } from './components/MedicineFinder';
 import { LabAnalyzer } from './components/LabAnalyzer';
+import { DoshaFinder } from './components/DoshaFinder';
 import { TabButton } from './components/TabButton';
 import { PillIcon } from './components/icons/PillIcon';
 import { BeakerIcon } from './components/icons/BeakerIcon';
+import { UserCircleIcon } from './components/icons/UserCircleIcon';
 
-type Tab = 'medicine' | 'lab';
+type Tab = 'medicine' | 'lab' | 'dosha';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('medicine');
+
+  const renderContent = () => {
+    switch(activeTab) {
+      case 'medicine':
+        return <MedicineFinder />;
+      case 'lab':
+        return <LabAnalyzer />;
+      case 'dosha':
+        return <DoshaFinder />;
+      default:
+        return <MedicineFinder />;
+    }
+  }
 
   return (
     <div className="min-h-screen bg-green-50 text-gray-800 font-sans">
@@ -30,9 +45,15 @@ const App: React.FC = () => {
               isActive={activeTab === 'lab'}
               onClick={() => setActiveTab('lab')}
             />
+            <TabButton
+              label="Dosha Finder"
+              icon={<UserCircleIcon className="w-5 h-5 mr-2" />}
+              isActive={activeTab === 'dosha'}
+              onClick={() => setActiveTab('dosha')}
+            />
           </div>
           <div>
-            {activeTab === 'medicine' ? <MedicineFinder /> : <LabAnalyzer />}
+            {renderContent()}
           </div>
         </div>
         <footer className="text-center text-sm text-green-700 mt-8">

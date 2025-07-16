@@ -1,11 +1,10 @@
-
 import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { getDoshaAnalysis } from '../services/geminiService';
 import type { DoshaAnalysisResult } from '../types';
 import { Spinner } from './Spinner';
-import { UserCircleIcon } from './icons/UserCircleIcon';
+import { UserCircleIcon } from './icons/UserCircleIcon.tsx';
 import { LifestyleCard } from './LifestyleCard';
-import { DoshaResultCard } from './DoshaResultCard';
+import { DoshaResultCard } from './DoshaResultCard.tsx';
 import { ShareButton } from './ShareButton';
 import { BookOpenIcon } from './icons/BookOpenIcon';
 

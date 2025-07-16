@@ -1,10 +1,9 @@
-
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { getHerbSuggestionForMedicine } from '../services/geminiService';
 import type { MedicineAnalysisResult } from '../types';
 import { ResultCard } from './ResultCard';
 import { Spinner } from './Spinner';
-import { SearchIcon } from './icons/SearchIcon';
+import { SearchIcon } from './icons';
 import { LifestyleCard } from './LifestyleCard';
 import { ShareButton } from './ShareButton';
 

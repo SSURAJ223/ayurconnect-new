@@ -1,9 +1,7 @@
-
-import express from 'express';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { GoogleGenAI, Type } from "@google/genai";
-import cors from 'cors';
+const express = require('express');
+const path = require('path');
+const { GoogleGenAI, Type } = require("@google/genai");
+const cors = require('cors');
 
 // This server will run in a secure environment where process.env.API_KEY is set.
 if (!process.env.API_KEY) {
@@ -21,27 +19,16 @@ app.use(express.json({ limit: '50mb' })); // Use express's body parser for JSON
 
 // --- Start of AI Logic ---
 
-const lifestyleSuggestionSchema = {
-    type: Type.OBJECT,
-    properties: {
-        suggestion: { type: Type.STRING, description: "The core lifestyle recommendation. E.g., 'Engage in moderate daily exercise'." },
-        details: { type: Type.STRING, description: "Specific, quantifiable details for the suggestion. E.g., 'Brisk walking for 30 minutes'." },
-        duration: { type: Type.STRING, description: "Recommended duration for the practice. E.g., '5 times a week for at least 3 months'." },
-        source: { type: Type.STRING, description: "The basis for the suggestion, citing the book name. E.g., 'Sushruta Samhita'." }
-    },
-    required: ["suggestion", "details", "duration", "source"]
-};
-
 const medicineSchema = {
     type: Type.OBJECT,
     properties: {
         drugSummary: {
             type: Type.STRING,
-            description: "A brief summary of the allopathic drug, its uses, and mechanism of action. This field should be present and populated only if the medicine name is valid."
+            description: "A brief summary of the allopathic drug, its uses, and mechanism of action."
         },
         herbSuggestions: {
             type: Type.ARRAY,
-            description: "A list of suggested complementary Ayurvedic herbs. This field should be present only if the medicine name is valid.",
+            description: "A list of suggested complementary Ayurvedic herbs.",
             items: {
                 type: Type.OBJECT,
                 properties: {
@@ -56,91 +43,105 @@ const medicineSchema = {
         },
         lifestyleSuggestions: {
             type: Type.ARRAY,
-            description: "A list of suggested lifestyle changes (diet, exercise, etc.) that complement the treatment. This field should be present only if the medicine name is valid.",
-            items: lifestyleSuggestionSchema
-        },
-        error: {
-          type: Type.STRING,
-          description: "An error message to be returned ONLY if the provided medicine name is not recognized or is invalid. In this case, this should be the ONLY field in the response. If the name is valid, this field must be null."
+            description: "A list of suggested lifestyle changes (diet, exercise, etc.) that complement the treatment.",
+            items: {
+                type: Type.OBJECT,
+                properties: {
+                    suggestion: { type: Type.STRING, description: "The lifestyle recommendation." },
+                    source: { type: Type.STRING, description: "The basis for the suggestion. E.g., 'Ayurvedic principles', 'General wellness'." }
+                },
+                required: ["suggestion", "source"]
+            }
         }
     },
+    required: ["drugSummary", "herbSuggestions", "lifestyleSuggestions"]
 };
 
-const labReportFindingSchema = {
+const labReportSchema = {
+    type: Type.ARRAY,
+    description: "An array of findings from the lab report analysis. If all markers are normal, return an empty array.",
+    items: {
+        type: Type.OBJECT,
+        properties: {
+            parameter: { type: Type.STRING, description: "The name of the lab marker that is out of range, e.g., 'Total Cholesterol'." },
+            status: { type: Type.STRING, description: "The status of the marker, e.g., 'High', 'Low'." },
+            summary: { type: Type.STRING, description: "A brief summary explaining the implication of this finding." },
+            herbSuggestions: {
+                type: Type.ARRAY,
+                description: "A list of suggested complementary Ayurvedic herbs for this specific finding.",
+                items: {
+                    type: Type.OBJECT,
+                    properties: {
+                        name: { type: Type.STRING, description: "Name of the Ayurvedic herb." },
+                        summary: { type: Type.STRING, description: "Summary of the herb's benefits related to the finding." },
+                        dosage: { type: Type.STRING, description: "Recommended dosage." },
+                        form: { type: Type.STRING, description: "Common form of consumption." },
+                        sideEffects: { type: Type.STRING, description: "Potential side effects or precautions." }
+                    },
+                    required: ["name", "summary", "dosage", "form", "sideEffects"]
+                }
+            },
+            lifestyleSuggestions: {
+                type: Type.ARRAY,
+                description: "A list of suggested lifestyle changes for this specific finding.",
+                items: {
+                    type: Type.OBJECT,
+                    properties: {
+                        suggestion: { type: Type.STRING, description: "The lifestyle recommendation." },
+                        source: { type: Type.STRING, description: "The basis for the suggestion." }
+                    },
+                    required: ["suggestion", "source"]
+                }
+            }
+        },
+        required: ["parameter", "status", "summary", "herbSuggestions", "lifestyleSuggestions"]
+    }
+};
+
+const doshaSchema = {
     type: Type.OBJECT,
     properties: {
-        parameter: { type: Type.STRING, description: "The name of the lab marker that is out of range, e.g., 'Total Cholesterol'." },
-        status: { type: Type.STRING, description: "The status of the marker, e.g., 'High', 'Low'." },
-        summary: { type: Type.STRING, description: "A brief summary explaining the implication of this finding." },
+        dominantDosha: { type: Type.STRING, description: "The user's dominant Dosha (e.g., Vata, Pitta, Kapha, Vata-Pitta)." },
+        doshaDescription: { type: Type.STRING, description: "A detailed description of the dominant Dosha, its qualities, and manifestations." },
         herbSuggestions: {
             type: Type.ARRAY,
-            description: "A list of suggested complementary Ayurvedic herbs for this specific finding.",
+            description: "A list of suggested Ayurvedic herbs to balance the identified Dosha.",
             items: {
                 type: Type.OBJECT,
                 properties: {
                     name: { type: Type.STRING, description: "Name of the Ayurvedic herb." },
-                    summary: { type: Type.STRING, description: "Summary of the herb's benefits related to the finding." },
-                    dosage: { type: Type.STRING, description: "Recommended dosage." },
-                    form: { type: Type.STRING, description: "Common form of consumption." },
-                    sideEffects: { type: Type.STRING, description: "Potential side effects or precautions." }
+                    benefits: { type: Type.STRING, description: "Key benefits of the herb for balancing the specific Dosha." },
+                    usage: { type: Type.STRING, description: "Recommended method of consumption or use." },
+                    source: { type: Type.STRING, description: "Citation from a classical Ayurvedic text, including the text name and chapter/verse (e.g., 'Charaka Samhita, Sutrasthana 25')." }
                 },
-                required: ["name", "summary", "dosage", "form", "sideEffects"]
+                required: ["name", "benefits", "usage", "source"]
             }
         },
         lifestyleSuggestions: {
             type: Type.ARRAY,
-            description: "A list of suggested lifestyle changes for this specific finding.",
-            items: lifestyleSuggestionSchema
+            description: "A list of suggested lifestyle modifications (diet, routine, exercise).",
+            items: {
+                type: Type.OBJECT,
+                properties: {
+                    suggestion: { type: Type.STRING, description: "The specific lifestyle recommendation." },
+                    reasoning: { type: Type.STRING, description: "The reasoning behind how this suggestion helps balance the Dosha." },
+                    source: { type: Type.STRING, description: "Citation from a classical Ayurvedic text (e.g., 'Ashtanga Hrudayam, Dinacharya')." }
+                },
+                required: ["suggestion", "reasoning", "source"]
+            }
         }
     },
-    required: ["parameter", "status", "summary", "herbSuggestions", "lifestyleSuggestions"]
+    required: ["dominantDosha", "doshaDescription", "herbSuggestions", "lifestyleSuggestions"]
 };
-
-const labReportResponseSchema = {
-    type: Type.OBJECT,
-    properties: {
-        findings: {
-            type: Type.ARRAY,
-            description: "An array of finding objects, one for each out-of-range biomarker. This field must be null if the input is not a valid lab report or if no biomarkers are found.",
-            items: labReportFindingSchema
-        },
-        error: {
-            type: Type.STRING,
-            description: "An error message to be returned ONLY if the provided text or image does not appear to contain recognizable lab report data. If recognizable data is present, this field must be null."
-        }
-    }
-}
 
 
 // API endpoint for all Gemini calls
 app.post('/api/gemini', async (req, res) => {
     try {
-        const { type, profile, ...data } = req.body;
-
-        const buildProfileString = (userProfile) => {
-            if (!userProfile || (!userProfile.age && !userProfile.gender && !userProfile.allergies)) {
-                 return "";
-            }
-            const parts = [];
-            if (userProfile.age) parts.push(`Age: ${userProfile.age}`);
-            if (userProfile.gender) parts.push(`Gender: ${userProfile.gender}`);
-            if (userProfile.allergies) parts.push(`Known Allergies: ${userProfile.allergies}`);
-
-            if (parts.length === 0) return "";
-            return `\n\nPlease tailor your recommendations for the following user profile: ${parts.join(', ')}. Crucially, ensure that none of your herb or lifestyle suggestions conflict with the user's known allergies. If a common suggestion is contraindicated due to an allergy, you must state that and suggest an alternative if possible.`;
-        };
-
-        const profileString = buildProfileString(profile);
+        const { type, ...data } = req.body;
 
         if (type === 'medicine') {
-            const prompt = `You are an expert AI assistant with deep knowledge in both allopathic medicine and Ayurveda. A user has provided the following allopathic medicine name: "${data.medicineName}".
-Your tasks are:
-1.  First, verify if "${data.medicineName}" is a recognized allopathic medicine or molecule name.
-2.  If the name is NOT valid or not recognized, your entire response MUST be a JSON object with only one key: "error". Its value should be a string like "The medicine name provided was not recognized. Please check the spelling and try again.". In this case, no other fields should be present in the JSON.
-3.  If the name IS valid, provide a detailed analysis. Your response MUST be a JSON object containing the 'drugSummary', 'herbSuggestions', and 'lifestyleSuggestions' fields. The 'error' field MUST be omitted entirely from the JSON object.
-4.  For 'lifestyleSuggestions', provide 2-3 relevant suggestions based on the principles found in the books "Rasayana: Ayurvedic herbs for longevity and rejuvenation" by H.S. Puri and "Sushruta Samhita". Each lifestyle suggestion must be specific and actionable, including quantifiable details (e.g., 'for 30 minutes daily') and a recommended duration (e.g., 'for at least 2 months'). You must cite the book's title in the 'source' field.${profileString}
-
-IMPORTANT: Structure your entire response as a single JSON object that conforms to the provided schema. Do not add any text outside of the JSON object.`;
+            const prompt = `You are an expert AI assistant with deep knowledge in both allopathic medicine and Ayurveda. A user has provided the following allopathic medicine name: "${data.medicineName}". Your task is to provide a detailed analysis and complementary suggestions. Follow these instructions precisely: 1. Provide a brief, easy-to-understand summary of the allopathic drug. 2. Suggest 2-3 complementary Ayurvedic herbs. 3. Provide 2-3 relevant lifestyle suggestions based on Ayurvedic principles. IMPORTANT: Structure your entire response as a single JSON object that conforms to the provided schema. Do not add any text outside of the JSON object.`;
             const response = await ai.models.generateContent({
                 model: "gemini-2.5-flash",
                 contents: prompt,
@@ -149,20 +150,10 @@ IMPORTANT: Structure your entire response as a single JSON object that conforms 
             res.status(200).json(JSON.parse(response.text));
 
         } else if (type === 'lab') {
-            const systemInstruction = `You are an expert AI assistant specializing in analyzing medical lab reports from both an allopathic and Ayurvedic perspective. Your task is to analyze the provided lab report data (which can be text or an image). Follow these instructions carefully:
-1. First, determine if the input contains recognizable lab report data (e.g., biomarkers like 'Cholesterol', 'Hemoglobin', 'TSH', with corresponding values and units).
-2. If no recognizable biomarkers are found, or if the input is clearly not a lab report (e.g., random words like 'cold', '123', 'test'), you MUST return a JSON object containing only the 'error' key. The value should be "The provided input does not appear to be a valid lab report. Please provide text or an image containing lab results.". The 'findings' key must be omitted.
-3. If the input IS a valid lab report, you must return a JSON object containing the 'findings' key. The 'error' key MUST be omitted.
-4. For the 'findings' key, identify key biomarkers that are outside of the standard normal range.
-5. If all biomarkers are within the normal range, the value for the 'findings' key should be an empty array (\`[]\`).
-6. For each out-of-range finding, provide a simple summary explaining what the result might indicate.
-7. For each finding, suggest 1-2 complementary Ayurvedic herbs that could help bring the marker back to balance.
-8. For each finding, suggest 1-2 relevant lifestyle modifications based on the principles found in the books "Rasayana: Ayurvedic herbs for longevity and rejuvenation" by H.S. Puri and "Sushruta Samhita". Each lifestyle suggestion must be specific and actionable, including quantifiable details (e.g., 'for 30 minutes daily') and a recommended duration (e.g., 'for at least 2 months'). You must cite the book's title in the 'source' field of the lifestyle suggestion.${profileString}
-IMPORTANT: Your entire response MUST be a single JSON object conforming to the provided schema. It must contain EITHER the 'findings' key (for a valid report) OR the 'error' key (for an invalid one), but not both. Do not add any text, greetings, or explanations outside of the JSON object.`;
-            
+            const systemInstruction = `You are an expert AI assistant specializing in analyzing medical lab reports from both an allopathic and Ayurvedic perspective. Your task is to analyze the provided lab report data (which can be text or an image). Follow these instructions carefully: 1. Identify key biomarkers in the report that are outside of the standard normal range. 2. For EACH biomarker that is out of range, create a distinct finding object. 3. If all biomarkers are within the normal range, return an empty array. 4. For each finding, provide a simple summary explaining what the result might indicate. 5. For each finding, suggest 1-2 complementary Ayurvedic herbs that could help bring the marker back to balance. 6. For each finding, suggest 1-2 relevant lifestyle modifications. IMPORTANT: Your response MUST be a single JSON array of finding objects that conforms to the provided schema. Do not include any text, greetings, or explanations outside of the JSON array.`;
             const parts = [];
             if (data.input.text) {
-                parts.push({ text: `Analyze the following lab report data:\n\n${data.input.text}` });
+                parts.push({ text: `Here is the lab report data:\n\n${data.input.text}` });
             }
             if (data.input.image) {
                 parts.push({ inlineData: data.input.image });
@@ -171,35 +162,44 @@ IMPORTANT: Your entire response MUST be a single JSON object conforming to the p
             const response = await ai.models.generateContent({
                 model: "gemini-2.5-flash",
                 contents: { parts },
-                config: { responseMimeType: "application/json", responseSchema: labReportResponseSchema, systemInstruction },
+                config: { responseMimeType: "application/json", responseSchema: labReportSchema, systemInstruction },
             });
-            
-            res.status(200).json(JSON.parse(response.text));
 
+            const responseText = response.text.trim();
+            if (responseText === "" || responseText === "[]") {
+                res.status(200).json([]);
+            } else {
+                res.status(200).json(JSON.parse(responseText));
+            }
+        } else if (type === 'dosha') {
+            const prompt = `You are a world-renowned Ayurvedic Vaidya (physician). A user has completed a questionnaire about their physical, metabolic, and mental characteristics. Their answers are provided in this JSON object: ${JSON.stringify(data.answers)}. Based on these answers, perform the following tasks:
+1.  Determine the user's dominant Prakriti (Dosha constitution), such as Vata, Pitta, Kapha, or a combination like Vata-Pitta.
+2.  Provide a detailed description of this dominant Dosha, explaining its core qualities and how they manifest.
+3.  Suggest 2-3 Ayurvedic herbs that are beneficial for balancing this Dosha. For each herb, provide its name, its key benefits for the Dosha, recommended usage, and a specific citation from a classical Ayurvedic text (e.g., Charaka Samhita, Sushruta Samhita, Ashtanga Hrudayam by Vagbhata). The citation must include the text name and chapter/verse if possible (e.g., 'Charaka Samhita, Chikitsa Sthana, 1.2').
+4.  Recommend 2-3 lifestyle changes (including diet/Dinacharya and exercise/Vyayama). For each suggestion, explain the reasoning and provide a citation from a classical text, similar to the herb suggestions.
+IMPORTANT: Your entire response must be a single JSON object conforming to the provided schema. Do not include any text outside the JSON structure.`;
+            const response = await ai.models.generateContent({
+                model: "gemini-2.5-flash",
+                contents: prompt,
+                config: { responseMimeType: "application/json", responseSchema: doshaSchema },
+            });
+            res.status(200).json(JSON.parse(response.text));
         } else {
             res.status(400).json({ error: 'Invalid request type' });
         }
 
     } catch (error) {
         if (error instanceof SyntaxError) {
-             console.error('Error parsing JSON from AI:', error.message);
+             console.error('Error parsing JSON from AI:', error);
              res.status(500).json({ error: 'The AI returned an invalid response format. Please try again.' });
         } else {
             console.error('Error in API handler:', error);
-            // Corrected line using standard JavaScript error handling.
-            const errorMessage = (error instanceof Error) ? error.message : 'An internal server error occurred.';
-            res.status(500).json({ error: errorMessage });
+            res.status(500).json({ error: error.message || 'An internal server error occurred.' });
         }
     }
 });
 
-
 // --- End of AI Logic ---
-
-// Get the directory name using ES module syntax
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 
 // Serve the static files from the 'dist' directory created by Vite's build process
 app.use(express.static(path.join(__dirname, 'dist')));
@@ -213,7 +213,6 @@ app.get('*', (req, res) => {
     }
   });
 });
-
 
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`);

@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { getDoshaAnalysis } from '../services/geminiService';
 import type { DoshaAnalysisResult } from '../types';
 import { Spinner } from './Spinner';
@@ -71,6 +71,13 @@ export const DoshaFinder: React.FC = () => {
     const [result, setResult] = useState<DoshaAnalysisResult | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(false);
     const [error, setError] = useState<string | null>(null);
+    const resultsRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (result) {
+          resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }, [result]);
 
     const totalQuestions = useMemo(() => questions.reduce((sum, section) => sum + section.items.length, 0), []);
     const answeredQuestions = useMemo(() => Object.keys(answers).length, [answers]);
@@ -94,7 +101,8 @@ export const DoshaFinder: React.FC = () => {
             const analysis = await getDoshaAnalysis(answers);
             setResult(analysis);
         } catch (err) {
-            setError('Failed to get analysis. Please check your connection or try again later.');
+            const message = err instanceof Error ? err.message : String(err);
+            setError(`Failed to get analysis. Please check your connection or try again later. Server response: ${message}`);
             console.error(err);
         } finally {
             setIsLoading(false);
@@ -130,7 +138,7 @@ export const DoshaFinder: React.FC = () => {
 
     if (result) {
         return (
-            <div className="space-y-8 animate-fade-in">
+            <div className="space-y-8 animate-fade-in" ref={resultsRef}>
                 <div className="text-center p-6 bg-gradient-to-br from-green-50 to-emerald-100 rounded-xl">
                     <h2 className="text-2xl font-bold text-emerald-800">Your Ayurvedic Constitution Analysis</h2>
                     <p className="text-gray-600 mt-1">Based on your answers, your dominant Dosha is:</p>
@@ -186,7 +194,7 @@ export const DoshaFinder: React.FC = () => {
                        <div className="space-y-6">
                            {section.items.map((q, qIndex) => (
                                <div key={q.key}>
-                                   <label className="font-semibold text-gray-700 block mb-2">{qIndex + 1}. {q.question}</label>
+                                   <label className="font-semibold text-gray-700 block mb-2">{(qIndex + 1) + (sectionIndex * 3)}. {q.question}</label>
                                    <div className="flex flex-col space-y-2">
                                        {q.options.map((opt, optIndex) => (
                                            <label key={optIndex} className={`flex items-center p-3 rounded-lg border cursor-pointer transition-all duration-200 ${answers[q.key] === opt ? 'bg-emerald-100 border-emerald-500 shadow' : 'bg-white border-gray-200 hover:border-emerald-300'}`}>

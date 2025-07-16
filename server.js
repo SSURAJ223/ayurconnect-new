@@ -115,7 +115,22 @@ const labReportResponseSchema = {
 // API endpoint for all Gemini calls
 app.post('/api/gemini', async (req, res) => {
     try {
-        const { type, ...data } = req.body;
+        const { type, profile, ...data } = req.body;
+
+        const buildProfileString = (userProfile) => {
+            if (!userProfile || (!userProfile.age && !userProfile.gender && !userProfile.allergies)) {
+                 return "";
+            }
+            const parts = [];
+            if (userProfile.age) parts.push(`Age: ${userProfile.age}`);
+            if (userProfile.gender) parts.push(`Gender: ${userProfile.gender}`);
+            if (userProfile.allergies) parts.push(`Known Allergies: ${userProfile.allergies}`);
+
+            if (parts.length === 0) return "";
+            return `\n\nPlease tailor your recommendations for the following user profile: ${parts.join(', ')}. Crucially, ensure that none of your herb or lifestyle suggestions conflict with the user's known allergies. If a common suggestion is contraindicated due to an allergy, you must state that and suggest an alternative if possible.`;
+        };
+
+        const profileString = buildProfileString(profile);
 
         if (type === 'medicine') {
             const prompt = `You are an expert AI assistant with deep knowledge in both allopathic medicine and Ayurveda. A user has provided the following allopathic medicine name: "${data.medicineName}".
@@ -123,7 +138,7 @@ Your tasks are:
 1.  First, verify if "${data.medicineName}" is a recognized allopathic medicine or molecule name.
 2.  If the name is NOT valid or not recognized, your entire response MUST be a JSON object with only one key: "error". Its value should be a string like "The medicine name provided was not recognized. Please check the spelling and try again.". In this case, no other fields should be present in the JSON.
 3.  If the name IS valid, provide a detailed analysis. Your response MUST be a JSON object containing the 'drugSummary', 'herbSuggestions', and 'lifestyleSuggestions' fields. The 'error' field MUST be omitted entirely from the JSON object.
-4.  For 'lifestyleSuggestions', provide 2-3 relevant suggestions based on the principles found in the books "Rasayana: Ayurvedic herbs for longevity and rejuvenation" by H.S. Puri and "Sushruta Samhita". Each lifestyle suggestion must be specific and actionable, including quantifiable details (e.g., 'for 30 minutes daily') and a recommended duration (e.g., 'for at least 2 months'). You must cite the book's title in the 'source' field.
+4.  For 'lifestyleSuggestions', provide 2-3 relevant suggestions based on the principles found in the books "Rasayana: Ayurvedic herbs for longevity and rejuvenation" by H.S. Puri and "Sushruta Samhita". Each lifestyle suggestion must be specific and actionable, including quantifiable details (e.g., 'for 30 minutes daily') and a recommended duration (e.g., 'for at least 2 months'). You must cite the book's title in the 'source' field.${profileString}
 
 IMPORTANT: Structure your entire response as a single JSON object that conforms to the provided schema. Do not add any text outside of the JSON object.`;
             const response = await ai.models.generateContent({
@@ -142,7 +157,7 @@ IMPORTANT: Structure your entire response as a single JSON object that conforms 
 5. If all biomarkers are within the normal range, the value for the 'findings' key should be an empty array (\`[]\`).
 6. For each out-of-range finding, provide a simple summary explaining what the result might indicate.
 7. For each finding, suggest 1-2 complementary Ayurvedic herbs that could help bring the marker back to balance.
-8. For each finding, suggest 1-2 relevant lifestyle modifications based on the principles found in the books "Rasayana: Ayurvedic herbs for longevity and rejuvenation" by H.S. Puri and "Sushruta Samhita". Each lifestyle suggestion must be specific and actionable, including quantifiable details (e.g., 'for 30 minutes daily') and a recommended duration (e.g., 'for at least 2 months'). You must cite the book's title in the 'source' field of the lifestyle suggestion.
+8. For each finding, suggest 1-2 relevant lifestyle modifications based on the principles found in the books "Rasayana: Ayurvedic herbs for longevity and rejuvenation" by H.S. Puri and "Sushruta Samhita". Each lifestyle suggestion must be specific and actionable, including quantifiable details (e.g., 'for 30 minutes daily') and a recommended duration (e.g., 'for at least 2 months'). You must cite the book's title in the 'source' field of the lifestyle suggestion.${profileString}
 IMPORTANT: Your entire response MUST be a single JSON object conforming to the provided schema. It must contain EITHER the 'findings' key (for a valid report) OR the 'error' key (for an invalid one), but not both. Do not add any text, greetings, or explanations outside of the JSON object.`;
             
             const parts = [];

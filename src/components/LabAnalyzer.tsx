@@ -9,6 +9,7 @@ import { UploadIcon } from './icons/UploadIcon';
 import { AlertTriangleIcon } from './icons/AlertTriangleIcon';
 import { LifestyleCard } from './LifestyleCard';
 import { ShareButton } from './ShareButton';
+import { ArrowLeftIcon } from './icons/ArrowLeftIcon';
 
 
 const fileToBase64 = (file: File): Promise<string> =>
@@ -77,6 +78,9 @@ const ACCEPTED_FILE_TYPES_STRING = 'image/png, image/jpeg, application/pdf';
 export const LabAnalyzer: React.FC = () => {
   const [reportData, setReportData] = useState<string>('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [age, setAge] = useState<string>('');
+  const [gender, setGender] = useState<string>('');
+  const [allergies, setAllergies] = useState<string>('');
   const [result, setResult] = useState<LabAnalysisResult | null>(null);
   const [submittedQuery, setSubmittedQuery] = useState<{ text: string; fileName: string | null } | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -107,6 +111,9 @@ export const LabAnalyzer: React.FC = () => {
     setSubmittedQuery(null);
     setError(null);
     setIsLoading(false);
+    setAge('');
+    setGender('');
+    setAllergies('');
     if(abortControllerRef.current){
       abortControllerRef.current.abort();
     }
@@ -188,11 +195,17 @@ export const LabAnalyzer: React.FC = () => {
               data: base64Data,
           };
       }
+      
+      const profile = {
+        age: age ? parseInt(age, 10) : undefined,
+        gender: gender || undefined,
+        allergies: allergies.trim() || undefined,
+      };
 
       const analysis = await analyzeLabReport({
           text: queryText ? queryText : undefined,
           image: imagePart || undefined
-      }, signal);
+      }, profile, signal);
 
       if (analysis === null) {
         console.log("Lab analysis request was cancelled.");
@@ -214,7 +227,7 @@ export const LabAnalyzer: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [reportData, selectedFile]);
+  }, [reportData, selectedFile, age, gender, allergies]);
 
   const showResults = (result || error) && submittedQuery && !isLoading;
   
@@ -229,6 +242,29 @@ export const LabAnalyzer: React.FC = () => {
             </p>
           </div>
           <form onSubmit={handleSubmit} className="space-y-4">
+            <fieldset className="p-4 border border-gray-200 rounded-lg">
+                <legend className="px-2 text-sm font-semibold text-gray-600">Optional: Personalize Your Results</legend>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label htmlFor="lab-age" className="block text-sm font-medium text-gray-700 mb-1">Age</label>
+                        <input type="number" name="lab-age" id="lab-age" value={age} onChange={e => setAge(e.target.value)} placeholder="e.g., 35" className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400 transition" disabled={isLoading} />
+                    </div>
+                    <div>
+                        <label htmlFor="lab-gender" className="block text-sm font-medium text-gray-700 mb-1">Gender</label>
+                        <select id="lab-gender" name="lab-gender" value={gender} onChange={e => setGender(e.target.value)} className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400 transition" disabled={isLoading}>
+                            <option value="">Select...</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Prefer not to say">Prefer not to say</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label htmlFor="lab-allergies" className="block text-sm font-medium text-gray-700 mb-1">Allergies (optional)</label>
+                        <input type="text" name="lab-allergies" id="lab-allergies" value={allergies} onChange={e => setAllergies(e.target.value)} placeholder="e.g., Peanuts, Sulfa" className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400 transition" disabled={isLoading} />
+                    </div>
+                </div>
+            </fieldset>
+
             <textarea
               value={reportData}
               onChange={(e) => {
@@ -309,7 +345,10 @@ export const LabAnalyzer: React.FC = () => {
                 <h3 className="text-lg font-semibold text-gray-700">Analysis for: <span className="font-bold text-emerald-700">{submittedQuery?.fileName || 'Pasted Text'}</span></h3>
                 <div className="flex items-center gap-2">
                   {result && <ShareButton textToShare={formatLabResultForSharing(submittedQuery!, result)} shareTitle="AyurConnect AI: Lab Report Analysis" />}
-                   <button onClick={handleReset} className="text-sm text-gray-500 hover:text-gray-800">Start New Analysis</button>
+                   <button onClick={handleReset} className="flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500">
+                      <ArrowLeftIcon className="w-4 h-4 mr-2 text-gray-500" />
+                      Back
+                   </button>
                 </div>
               </div>
 

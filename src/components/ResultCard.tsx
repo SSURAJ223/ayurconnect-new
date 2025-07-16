@@ -1,10 +1,6 @@
-
 import React from 'react';
 import type { HerbSuggestion } from '../types';
-import { LeafIcon } from './icons/LeafIcon';
-import { AlertTriangleIcon } from './icons/AlertTriangleIcon';
-import { BeakerIcon } from './icons/BeakerIcon';
-import { BookOpenIcon } from './icons/BookOpenIcon';
+import { LeafIcon, AlertTriangleIcon, BeakerIcon, BookOpenIcon } from './icons';
 
 interface ResultCardProps {
   suggestion: HerbSuggestion;

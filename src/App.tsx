@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Header } from './components/Header';
 import { MedicineFinder } from './components/MedicineFinder';
@@ -6,7 +7,7 @@ import { DoshaFinder } from './components/DoshaFinder';
 import { TabButton } from './components/TabButton';
 import { PillIcon } from './components/icons/PillIcon';
 import { BeakerIcon } from './components/icons/BeakerIcon';
-import { UserCircleIcon } from './components/icons/UserCircleIcon.tsx';
+import { UserCircleIcon } from './components/icons/UserCircleIcon';
 
 type Tab = 'medicine' | 'lab' | 'dosha';
 

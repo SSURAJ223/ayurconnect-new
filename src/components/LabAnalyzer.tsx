@@ -1,12 +1,9 @@
-
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { analyzeLabReport } from '../services/geminiService';
 import type { LabAnalysisResult } from '../types';
 import { ResultCard } from './ResultCard';
 import { Spinner } from './Spinner';
-import { ClipboardCheckIcon } from './icons/ClipboardCheckIcon';
-import { UploadIcon } from './icons/UploadIcon';
-import { AlertTriangleIcon } from './icons/AlertTriangleIcon';
+import { ClipboardCheckIcon, UploadIcon, AlertTriangleIcon } from './icons';
 import { LifestyleCard } from './LifestyleCard';
 import { ShareButton } from './ShareButton';
 

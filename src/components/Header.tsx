@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { LeafIcon } from './icons/LeafIcon';
+import { LeafIcon } from './icons';
 import { ShareButton } from './ShareButton';
 
 export const Header: React.FC = () => {

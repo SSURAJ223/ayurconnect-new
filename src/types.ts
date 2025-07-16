@@ -1,4 +1,3 @@
-
 export interface HerbSuggestion {
   name: string;
   summary: string;
@@ -9,22 +8,14 @@ export interface HerbSuggestion {
 
 export interface LifestyleSuggestion {
   suggestion: string;
-  details: string;
-  duration: string;
   source: string;
-}
-
-export interface UserProfile {
-  age?: number;
-  gender?: string;
-  allergies?: string;
+  reasoning?: string;
 }
 
 export interface MedicineAnalysisResult {
-  drugSummary?: string;
-  herbSuggestions?: HerbSuggestion[];
-  lifestyleSuggestions?: LifestyleSuggestion[];
-  error?: string;
+  drugSummary: string;
+  herbSuggestions: HerbSuggestion[];
+  lifestyleSuggestions: LifestyleSuggestion[];
 }
 
 export interface LabFindingAnalysis {
@@ -35,7 +26,25 @@ export interface LabFindingAnalysis {
   lifestyleSuggestions: LifestyleSuggestion[];
 }
 
-export interface LabAnalysisResult {
-  findings?: LabFindingAnalysis[];
-  error?: string;
+export type LabAnalysisResult = LabFindingAnalysis[];
+
+// Types for Dosha Finder
+export interface DoshaHerbSuggestion {
+  name: string;
+  benefits: string;
+  usage: string;
+  source: string;
+}
+
+export interface DoshaLifestyleSuggestion {
+  suggestion: string;
+  reasoning: string;
+  source: string;
+}
+
+export interface DoshaAnalysisResult {
+  dominantDosha: string;
+  doshaDescription: string;
+  herbSuggestions: DoshaHerbSuggestion[];
+  lifestyleSuggestions: DoshaLifestyleSuggestion[];
 }

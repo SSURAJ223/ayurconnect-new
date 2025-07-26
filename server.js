@@ -19,6 +19,26 @@ app.use(express.json({ limit: '50mb' }));
 
 // --- Start of AI Logic ---
 
+// New endpoint for handling contact requests
+app.post('/api/contact', (req, res) => {
+    const { name, email, phone } = req.body;
+
+    if (!name || !email || !phone) {
+        return res.status(400).json({ error: 'Name, email, and phone are required.' });
+    }
+
+    // In a real-world application, you would integrate an email service like Nodemailer or SendGrid here
+    // to send an email to ssuraj.amz@gmail.com.
+    console.log('--- NEW EXPERT CONTACT REQUEST ---');
+    console.log(`Name: ${name}`);
+    console.log(`Email: ${email}`);
+    console.log(`Phone: ${phone}`);
+    console.log('This would trigger an email to ssuraj.amz@gmail.com');
+    
+    res.status(200).json({ message: 'Your request has been sent. An expert will contact you shortly.' });
+});
+
+
 const medicineSchema = {
     type: Type.OBJECT,
     properties: {
@@ -33,7 +53,7 @@ const medicineSchema = {
                 type: Type.OBJECT,
                 properties: {
                     name: { type: Type.STRING, description: "Name of the Ayurvedic herb." },
-                    summary: { type: Type.STRING, description: "Summary of the herb's benefits, particularly in relation to the drug's purpose." },
+                    summary: { type: Type.STRING, description: "Summary of the herb's benefits, particularly in relation to the drug's purpose and the user's context." },
                     dosage: { type: Type.STRING, description: "Recommended dosage. E.g., '1-2 tablets twice a day'." },
                     form: { type: Type.STRING, description: "Common form of consumption. E.g., 'Powder, Tablet'." },
                     sideEffects: { type: Type.STRING, description: "Potential side effects or precautions. Mention 'Consult a doctor' if applicable." }
@@ -43,7 +63,7 @@ const medicineSchema = {
         },
         lifestyleSuggestions: {
             type: Type.ARRAY,
-            description: "A list of suggested lifestyle changes (diet, exercise, etc.) that complement the treatment.",
+            description: "A list of suggested lifestyle changes (diet, exercise, etc.) that complement the treatment, personalized to the user.",
             items: {
                 type: Type.OBJECT,
                 properties: {
@@ -68,7 +88,7 @@ const labReportSchema = {
             summary: { type: Type.STRING, description: "A brief summary explaining the implication of this finding." },
             herbSuggestions: {
                 type: Type.ARRAY,
-                description: "A list of suggested complementary Ayurvedic herbs for this specific finding.",
+                description: "A list of suggested complementary Ayurvedic herbs for this specific finding, personalized to the user.",
                 items: {
                     type: Type.OBJECT,
                     properties: {
@@ -83,7 +103,7 @@ const labReportSchema = {
             },
             lifestyleSuggestions: {
                 type: Type.ARRAY,
-                description: "A list of suggested lifestyle changes for this specific finding.",
+                description: "A list of suggested lifestyle changes for this specific finding, personalized to the user.",
                 items: {
                     type: Type.OBJECT,
                     properties: {
@@ -108,12 +128,12 @@ const doshaSchema = {
             properties: {
                 diet: {
                     type: Type.ARRAY,
-                    description: "List of 3-4 specific dietary recommendations based on Rasayana principles to balance this dosha. These should be actionable (e.g., 'Favor warm, moist foods like soups and stews.').",
+                    description: "List of 3-4 specific dietary recommendations based on Rasayana principles to balance this dosha, personalized to the user's context.",
                     items: { type: Type.STRING }
                 },
                 lifestyle: {
                     type: Type.ARRAY,
-                    description: "List of 3-4 specific lifestyle recommendations based on Rasayana principles (e.g., 'Maintain a regular daily routine, including consistent meal and sleep times.').",
+                    description: "List of 3-4 specific lifestyle recommendations based on Rasayana principles, personalized to the user's context.",
                     items: { type: Type.STRING }
                 }
             },
@@ -135,7 +155,7 @@ app.post('/api/gemini', async (req, res) => {
         const { type, ...data } = req.body;
 
         if (type === 'medicine') {
-            const prompt = `You are an expert AI assistant with deep knowledge in both allopathic medicine and Ayurveda. A user has provided the following allopathic medicine name: "${data.medicineName}". Your task is to provide a detailed analysis and complementary suggestions. Follow these instructions precisely: 1. Provide a brief, easy-to-understand summary of the allopathic drug. 2. Suggest 2-3 complementary Ayurvedic herbs. 3. Provide 2-3 relevant lifestyle suggestions based on Ayurvedic principles. IMPORTANT: Structure your entire response as a single JSON object that conforms to the provided schema. Do not add any text outside of the JSON object.`;
+            const prompt = `You are an expert AI assistant with deep knowledge in both allopathic medicine and Ayurveda. A user has provided the following details: Age: ${data.personalization?.age || 'Not provided'}, Gender: ${data.personalization?.gender || 'Not provided'}, Known Allergies/Symptoms: "${data.personalization?.context || 'None'}". They are taking the allopathic medicine: "${data.medicineName}". Your task is to provide personalized complementary suggestions. Follow these instructions precisely: 1. Provide a brief, easy-to-understand summary of the allopathic drug. 2. Suggest 2-3 complementary Ayurvedic herbs, ensuring they are appropriate for the user's context (age, gender, symptoms). 3. Provide 2-3 relevant lifestyle suggestions, tailored to the user. IMPORTANT: In your summaries and suggestions, clearly state how the recommendation is personalized if applicable (e.g., "Given your age...", "To help with your reported symptoms..."). Structure your entire response as a single JSON object that conforms to the provided schema. Do not add any text outside of the JSON object.`;
             const response = await ai.models.generateContent({
                 model: "gemini-2.5-flash",
                 contents: prompt,
@@ -144,7 +164,7 @@ app.post('/api/gemini', async (req, res) => {
             res.status(200).json(JSON.parse(response.text));
 
         } else if (type === 'lab') {
-            const systemInstruction = `You are an expert AI assistant specializing in analyzing medical lab reports from both an allopathic and Ayurvedic perspective. Your task is to analyze the provided lab report data (which can be text or an image). Follow these instructions carefully: 1. Identify key biomarkers in the report that are outside of the standard normal range. 2. For EACH biomarker that is out of range, create a distinct finding object. 3. If all biomarkers are within the normal range, return an empty array. 4. For each finding, provide a simple summary explaining what the result might indicate. 5. For each finding, suggest 1-2 complementary Ayurvedic herbs that could help bring the marker back to balance. 6. For each finding, suggest 1-2 relevant lifestyle modifications. IMPORTANT: Your response MUST be a single JSON array of finding objects that conforms to the provided schema. Do not include any text, greetings, or explanations outside of the JSON array.`;
+            const systemInstruction = `You are an expert AI assistant specializing in analyzing medical lab reports from both an allopathic and Ayurvedic perspective. Your task is to analyze the provided lab report data (which can be text or an image) for a user with these details: Age: ${data.personalization?.age || 'Not provided'}, Gender: ${data.personalization?.gender || 'Not provided'}, Known Allergies/Symptoms: "${data.personalization?.context || 'None'}". Follow these instructions carefully: 1. Identify key biomarkers in the report that are outside of the standard normal range. 2. For EACH biomarker that is out of range, create a distinct finding object. 3. If all biomarkers are within the normal range, return an empty array. 4. For each finding, provide a simple summary explaining what the result might indicate. 5. For each finding, suggest 1-2 complementary Ayurvedic herbs that could help bring the marker back to balance, tailoring them to the user's context. 6. For each finding, suggest 1-2 relevant lifestyle modifications, also tailored to the user. IMPORTANT: In your summaries and suggestions, clearly state how the recommendation is personalized if applicable. Your response MUST be a single JSON array of finding objects that conforms to the provided schema. Do not include any text, greetings, or explanations outside of the JSON array.`;
             const parts = [];
             if (data.input.text) {
                 parts.push({ text: `Here is the lab report data:\n\n${data.input.text}` });
@@ -166,17 +186,18 @@ app.post('/api/gemini', async (req, res) => {
                 res.status(200).json(JSON.parse(responseText));
             }
         } else if (type === 'dosha') {
-            const prompt = `You are an expert Ayurvedic practitioner with knowledge from classical texts like the Sushruta Samhita and modern interpretations like H.S. Puri's "Rasayana". Based on the following user-provided characteristics, identify their dominant dosha (Prakriti).
+            const prompt = `You are an expert Ayurvedic practitioner with knowledge from classical texts like the Sushruta Samhita and modern interpretations. Based on the following user-provided characteristics, identify their dominant dosha (Prakriti).
             
-            User's characteristics: ${JSON.stringify(data.answers, null, 2)}
+            User's questionnaire answers: ${JSON.stringify(data.answers, null, 2)}
+            User's context: Age: ${data.personalization?.age || 'Not provided'}, Gender: ${data.personalization?.gender || 'Not provided'}, Known Allergies/Symptoms: "${data.personalization?.context || 'None'}".
             
             Your task is to:
             1.  Analyze the inputs and determine the most likely dominant dosha (Vata, Pitta, Kapha, or a combination if strongly indicated).
-            2.  Provide a clear, concise explanation of the identified dosha's qualities and tendencies, referencing the core elements (ether, air, fire, water, earth).
-            3.  Offer 3-4 specific dietary recommendations and 3-4 lifestyle recommendations based on Rasayana principles to maintain balance for this dosha.
-            4.  Cite your sources where appropriate, such as "(Sushruta Samhita, Sutrasthanam)" or "(Puri, H.S. Rasayana)".
+            2.  Provide a clear, concise explanation of the identified dosha's qualities and tendencies.
+            3.  Offer 3-4 specific dietary recommendations and 3-4 lifestyle recommendations based on Rasayana principles, tailoring them to the user's specific context in addition to their dosha.
+            4.  Cite your sources where appropriate, such as "(Sushruta Samhita, Sutrasthanam)".
             
-            IMPORTANT: Structure your entire response as a single JSON object that conforms to the provided schema. Do not add any text outside of the JSON object.`;
+            IMPORTANT: Clearly mention how the user's context influences the recommendations. Structure your entire response as a single JSON object that conforms to the provided schema. Do not add any text outside of the JSON object.`;
 
             const response = await ai.models.generateContent({
                 model: "gemini-2.5-flash",

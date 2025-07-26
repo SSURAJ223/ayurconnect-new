@@ -36,3 +36,15 @@ export interface DoshaAnalysisResult {
   };
   sources: string[];
 }
+
+export interface PersonalizationData {
+  age: string;
+  gender: string;
+  context: string;
+}
+
+export interface ContactDetails {
+    name: string;
+    phone: string;
+    email: string;
+}

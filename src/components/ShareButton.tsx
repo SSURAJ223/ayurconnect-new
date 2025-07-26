@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ShareIcon } from './icons/ShareIcon';
 import { ClipboardCheckIcon } from './icons/ClipboardCheckIcon';

@@ -2,42 +2,98 @@ const express = require('express');
 const path = require('path');
 const { GoogleGenAI, Type } = require("@google/genai");
 const cors = require('cors');
+const nodemailer = require('nodemailer');
 
 // This server will run in a secure environment where process.env.API_KEY is set.
 if (!process.env.API_KEY) {
     throw new Error("API_KEY environment variable is not set.");
 }
 
+// Check for email credentials. If not present, the contact form will only log to the console.
+if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.warn("Email credentials (EMAIL_USER, EMAIL_PASS) are not set. Contact form will not send live emails.");
+}
+
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 const app = express();
 const port = process.env.PORT || 10000;
 
-// Enable CORS for all routes.
 app.use(cors());
-
 app.use(express.json({ limit: '50mb' }));
 
-// --- Start of AI Logic ---
+// --- Start of Email Logic ---
+// Create a Nodemailer transporter using SMTP.
+// It's assumed a secure environment where these env vars are set (e.g., using a service like Gmail with an App Password).
+const transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST || 'smtp.gmail.com', // Default to Gmail SMTP
+    port: parseInt(process.env.EMAIL_PORT, 10) || 587,
+    secure: (parseInt(process.env.EMAIL_PORT, 10) || 587) === 465, // true for 465, false for other ports
+    auth: {
+        user: process.env.EMAIL_USER, // The sending email address
+        pass: process.env.EMAIL_PASS, // The app-specific password for the sending email account
+    },
+});
 
-// New endpoint for handling contact requests
-app.post('/api/contact', (req, res) => {
+// Verify transporter configuration on startup if credentials are provided
+if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+    transporter.verify(function (error, success) {
+        if (error) {
+            console.error("Nodemailer configuration error:", error);
+        } else {
+            console.log("Nodemailer is configured and ready to send emails.");
+        }
+    });
+}
+// --- End of Email Logic ---
+
+// --- Start of API Logic ---
+
+// Endpoint for handling contact requests
+app.post('/api/contact', async (req, res) => {
     const { name, email, phone } = req.body;
 
     if (!name || !email || !phone) {
         return res.status(400).json({ error: 'Name, email, and phone are required.' });
     }
 
-    // In a real-world application, you would integrate an email service like Nodemailer or SendGrid here
-    // to send an email to ssuraj.amz@gmail.com.
-    console.log('--- NEW EXPERT CONTACT REQUEST ---');
-    console.log(`Name: ${name}`);
-    console.log(`Email: ${email}`);
-    console.log(`Phone: ${phone}`);
-    console.log('This would trigger an email to ssuraj.amz@gmail.com');
-    
-    res.status(200).json({ message: 'Your request has been sent. An expert will contact you shortly.' });
-});
+    // Fallback for environments where email credentials aren't configured.
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+        console.log('--- EMAIL NOT SENT (credentials not configured) ---');
+        console.log('--- NEW EXPERT CONTACT REQUEST ---');
+        console.log(`Name: ${name}`);
+        console.log(`Email: ${email}`);
+        console.log(`Phone: ${phone}`);
+        return res.status(200).json({ message: 'Your request has been received. An expert will contact you shortly.' });
+    }
 
+    const mailOptions = {
+        from: `"AyurConnect AI" <${process.env.EMAIL_USER}>`, // sender address
+        to: 'ssuraj.amz@gmail.com', // list of receivers
+        subject: 'New Consultation Request from AyurConnect AI', // Subject line
+        text: `You have received a new consultation request from the AyurConnect AI app.\n\nName: ${name}\nEmail: ${email}\nPhone: ${phone}\n\nPlease reach out to them soon.`, // plain text body
+        html: `
+            <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                <h2 style="color: #047857;">New Consultation Request</h2>
+                <p>You have received a new consultation request from the <strong>AyurConnect AI</strong> app.</p>
+                <hr style="border: 0; border-top: 1px solid #ddd;">
+                <p><strong>Name:</strong> ${name}</p>
+                <p><strong>Email:</strong> <a href="mailto:${email}" style="color: #047857;">${email}</a></p>
+                <p><strong>Phone:</strong> ${phone}</p>
+                <hr style="border: 0; border-top: 1px solid #ddd;">
+                <p>Please reach out to them soon.</p>
+            </div>
+        `, // html body
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`--- CONTACT EMAIL SENT --- To: ssuraj.amz@gmail.com, From User: ${name} (${email})`);
+        res.status(200).json({ message: 'Your request has been sent. An expert will contact you shortly.' });
+    } catch (error) {
+        console.error("Error sending contact email:", error);
+        res.status(500).json({ error: 'There was a problem sending your request. Please try again later.' });
+    }
+});
 
 const medicineSchema = {
     type: Type.OBJECT,
@@ -220,8 +276,6 @@ app.post('/api/gemini', async (req, res) => {
         }
     }
 });
-
-// --- End of AI Logic ---
 
 // Serve the static files from the 'dist' directory created by Vite's build process
 app.use(express.static(path.join(__dirname, 'dist')));

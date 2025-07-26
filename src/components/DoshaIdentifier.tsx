@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { identifyDosha } from '../services/geminiService';
-import type { DoshaAnalysisResult } from '../types';
+import type { DoshaAnalysisResult, PersonalizationData } from '../types';
 import { Spinner } from './Spinner';
 import { UserIcon } from './icons/UserIcon';
 import { DoshaResult } from './DoshaResult';
@@ -22,8 +22,11 @@ const questions: Question[] = [
   { key: 'stressResponse', text: 'Under stress, you tend to feel...', options: ['Anxious, worried, fearful', 'Irritable, angry, critical', 'Calm, withdrawn, possessive'] },
 ];
 
+interface DoshaIdentifierProps {
+  personalizationData: PersonalizationData;
+}
 
-export const DoshaIdentifier: React.FC = () => {
+export const DoshaIdentifier: React.FC<DoshaIdentifierProps> = ({ personalizationData }) => {
   const [answers, setAnswers] = useState<Record<string, Answer>>({});
   const [result, setResult] = useState<DoshaAnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -45,7 +48,7 @@ export const DoshaIdentifier: React.FC = () => {
     setResult(null);
 
     try {
-      const analysis = await identifyDosha(answers as Record<string, string>);
+      const analysis = await identifyDosha(answers as Record<string, string>, personalizationData);
       setResult(analysis);
     } catch (err) {
       setError('Failed to identify dosha. Please try again later.');
@@ -53,7 +56,7 @@ export const DoshaIdentifier: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [answers, isComplete]);
+  }, [answers, isComplete, personalizationData]);
 
   return (
     <div className="space-y-6">

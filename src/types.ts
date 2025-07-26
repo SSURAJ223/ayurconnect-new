@@ -9,7 +9,6 @@ export interface HerbSuggestion {
 export interface LifestyleSuggestion {
   suggestion: string;
   source: string;
-  reasoning?: string;
 }
 
 export interface MedicineAnalysisResult {
@@ -28,23 +27,12 @@ export interface LabFindingAnalysis {
 
 export type LabAnalysisResult = LabFindingAnalysis[];
 
-// Types for Dosha Finder
-export interface DoshaHerbSuggestion {
-  name: string;
-  benefits: string;
-  usage: string;
-  source: string;
-}
-
-export interface DoshaLifestyleSuggestion {
-  suggestion: string;
-  reasoning: string;
-  source: string;
-}
-
 export interface DoshaAnalysisResult {
-  dominantDosha: string;
-  doshaDescription: string;
-  herbSuggestions: DoshaHerbSuggestion[];
-  lifestyleSuggestions: DoshaLifestyleSuggestion[];
+  dosha: string;
+  explanation: string;
+  recommendations: {
+    diet: string[];
+    lifestyle: string[];
+  };
+  sources: string[];
 }

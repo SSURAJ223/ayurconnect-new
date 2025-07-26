@@ -16,7 +16,6 @@ const fileToBase64 = (file: File): Promise<string> =>
     reader.readAsDataURL(file);
     reader.onload = () => {
       const result = reader.result as string;
-      // remove the "data:mime/type;base64," part
       resolve(result.split(',')[1]);
     };
     reader.onerror = error => reject(error);

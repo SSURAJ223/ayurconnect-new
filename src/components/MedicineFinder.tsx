@@ -62,7 +62,6 @@ export const MedicineFinder: React.FC<MedicineFinderProps> = ({ personalizationD
     try {
       const analysis = await getHerbSuggestionForMedicine(medicineName, personalizationData);
       setResult(analysis);
-      setMedicineName('');
     } catch (err) {
       setError('Failed to get suggestion. Please check your connection or try again later.');
       console.error(err);
@@ -78,45 +77,44 @@ export const MedicineFinder: React.FC<MedicineFinderProps> = ({ personalizationD
           Enter an allopathic medicine or molecule name to discover Ayurvedic herbs that can support your treatment.
         </p>
       </div>
-      <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row items-center gap-2">
+      <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row items-center gap-3">
         <input
           type="text"
           value={medicineName}
           onChange={(e) => setMedicineName(e.target.value)}
           placeholder="e.g., Metformin, Atorvastatin"
-          className="w-full px-4 py-3 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 transition"
+          className="w-full px-4 py-3 bg-white border border-gray-300 rounded-full focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 transition"
           disabled={isLoading}
         />
         <button
           type="submit"
           disabled={isLoading || !medicineName.trim()}
-          className="w-full sm:w-auto flex items-center justify-center px-6 py-3 bg-emerald-600 text-white font-semibold rounded-lg hover:bg-emerald-700 disabled:bg-gray-400 transition-colors duration-200"
+          className="w-full sm:w-auto flex items-center justify-center px-6 py-3 bg-emerald-600 text-white font-bold rounded-full hover:bg-emerald-700 disabled:bg-gray-400 transition-all duration-200 shadow-lg hover:shadow-xl disabled:shadow-none"
         >
-          {isLoading ? <Spinner /> : <SearchIcon className="w-5 h-5 mr-2" />}
-          Find Complementary Herb
+          {isLoading ? <Spinner /> : <><SearchIcon className="w-5 h-5 mr-2" /> Find Herbs</>}
         </button>
       </form>
       
       {error && <div className="text-red-600 bg-red-100 p-3 rounded-lg">{error}</div>}
 
-      {isLoading && <div className="text-center p-4"><p className="text-emerald-700">Analyzing, please wait...</p></div>}
+      {isLoading && <div className="text-center p-4"><p className="text-emerald-700 font-semibold">Analyzing, please wait...</p></div>}
 
       {result && (
-        <div className="space-y-6 animate-fade-in" ref={resultsRef}>
-          <div className="flex justify-between items-center mb-2">
-             <h3 className="text-lg font-semibold text-gray-700">Analysis Result:</h3>
+        <div className="space-y-8 animate-fade-in" ref={resultsRef}>
+          <div className="flex justify-between items-center mt-4">
+             <h3 className="font-display text-xl font-bold text-gray-700">Analysis Result:</h3>
              <ShareButton textToShare={formatMedicineResultForSharing(result)} shareTitle="AyurConnect AI: Medicine Analysis" />
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold text-gray-700 mb-2">Drug Summary:</h3>
-            <p className="bg-green-50 p-4 rounded-lg text-gray-800">{result.drugSummary}</p>
+            <h4 className="font-display text-lg font-bold text-gray-700 mb-2">Drug Summary</h4>
+            <p className="bg-green-50 p-4 rounded-xl text-gray-800 border border-green-100">{result.drugSummary}</p>
           </div>
           
           {result.herbSuggestions.length > 0 && (
             <div>
-              <h3 className="text-lg font-semibold text-gray-700 mb-2">Complementary Herb Suggestions:</h3>
-              <div className="space-y-4">
+              <h4 className="font-display text-lg font-bold text-gray-700 mb-3">Complementary Herb Suggestions</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {result.herbSuggestions.map((suggestion, index) => (
                   <ResultCard key={index} suggestion={suggestion} />
                 ))}
@@ -126,7 +124,7 @@ export const MedicineFinder: React.FC<MedicineFinderProps> = ({ personalizationD
 
           {result.lifestyleSuggestions && result.lifestyleSuggestions.length > 0 && (
             <div>
-              <h3 className="text-lg font-semibold text-gray-700 mb-2">Lifestyle Recommendations:</h3>
+              <h4 className="font-display text-lg font-bold text-gray-700 mb-3">Lifestyle Recommendations</h4>
               <div className="space-y-3">
                 {result.lifestyleSuggestions.map((suggestion, index) => (
                   <LifestyleCard key={index} suggestion={suggestion} />

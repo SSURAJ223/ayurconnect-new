@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { analyzeLabReport } from '../services/geminiService';
-import type { LabAnalysisResult } from '../types';
+import type { LabAnalysisResult, PersonalizationData } from '../types';
 import { ResultCard } from './ResultCard';
 import { Spinner } from './Spinner';
 import { ClipboardCheckIcon } from './icons/ClipboardCheckIcon';
@@ -61,8 +61,11 @@ const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 const ACCEPTED_FILE_TYPES = ['image/png', 'image/jpeg', 'application/pdf'];
 const ACCEPTED_FILE_TYPES_STRING = 'image/png, image/jpeg, application/pdf';
 
+interface LabAnalyzerProps {
+  personalizationData: PersonalizationData;
+}
 
-export const LabAnalyzer: React.FC = () => {
+export const LabAnalyzer: React.FC<LabAnalyzerProps> = ({ personalizationData }) => {
   const [reportData, setReportData] = useState<string>('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [results, setResults] = useState<LabAnalysisResult | null>(null);
@@ -151,7 +154,7 @@ export const LabAnalyzer: React.FC = () => {
       const analysis = await analyzeLabReport({
           text: reportData.trim() ? reportData.trim() : undefined,
           image: imagePart || undefined
-      });
+      }, personalizationData);
 
       const potentialError = analysis as any;
       if (Array.isArray(potentialError) && potentialError.length > 0 && potentialError[0].error) {
@@ -172,7 +175,7 @@ export const LabAnalyzer: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [reportData, selectedFile]);
+  }, [reportData, selectedFile, personalizationData]);
   
 
   return (

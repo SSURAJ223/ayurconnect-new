@@ -2,13 +2,12 @@
   "name": "ayurconnect-ai-app-final",
   "private": true,
   "version": "1.0.0",
-  "type": "module",
   "scripts": {
-  "dev": "vite",
-  "build": "tsc && vite build",
-  "preview": "vite preview",
-  "start": "node server.cjs"
-},
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "start": "node server.js"
+  },
   "dependencies": {
     "@google/genai": "^1.9.0",
     "cors": "^2.8.5",

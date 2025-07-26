@@ -1,4 +1,3 @@
-
 import type { MedicineAnalysisResult, LabAnalysisResult, DoshaAnalysisResult } from '../types';
 
 // This interface defines the expected structure for lab report submissions to our backend.
@@ -67,11 +66,11 @@ export async function analyzeLabReport(input: LabInput): Promise<LabAnalysisResu
 }
 
 /**
- * Sends a request to our backend to analyze a user's answers to the Dosha questionnaire.
- * @param answers An object containing the user's answers.
- * @returns A promise that resolves to the Dosha analysis result.
+ * Sends a request to our backend to identify the user's dosha based on their answers.
+ * @param answers A record of question keys and user's answers.
+ * @returns A promise that resolves to the dosha analysis result.
  */
-export async function getDoshaAnalysis(answers: Record<string, string>): Promise<DoshaAnalysisResult> {
+export async function identifyDosha(answers: Record<string, string>): Promise<DoshaAnalysisResult> {
   return fetchFromApi({
     type: 'dosha',
     answers,

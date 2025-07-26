@@ -11,7 +11,7 @@ interface BottomNavProps {
 }
 
 const NavItem: React.FC<{
-    icon: React.ReactElement;
+    icon: React.ReactElement<{ className?: string }>;
     label: string;
     isActive: boolean;
     onClick: () => void;

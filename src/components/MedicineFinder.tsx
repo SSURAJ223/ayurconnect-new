@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { getHerbSuggestionForMedicine } from '../services/geminiService';
-import type { MedicineAnalysisResult } from '../types';
+import type { MedicineAnalysisResult, PersonalizationData } from '../types';
 import { ResultCard } from './ResultCard';
 import { Spinner } from './Spinner';
 import { SearchIcon } from './icons/SearchIcon';
@@ -32,7 +32,11 @@ const formatMedicineResultForSharing = (result: MedicineAnalysisResult): string 
   return text.trim();
 };
 
-export const MedicineFinder: React.FC = () => {
+interface MedicineFinderProps {
+  personalizationData: PersonalizationData;
+}
+
+export const MedicineFinder: React.FC<MedicineFinderProps> = ({ personalizationData }) => {
   const [medicineName, setMedicineName] = useState<string>('');
   const [result, setResult] = useState<MedicineAnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -56,7 +60,7 @@ export const MedicineFinder: React.FC = () => {
     setResult(null);
 
     try {
-      const analysis = await getHerbSuggestionForMedicine(medicineName);
+      const analysis = await getHerbSuggestionForMedicine(medicineName, personalizationData);
       setResult(analysis);
       setMedicineName('');
     } catch (err) {
@@ -65,7 +69,7 @@ export const MedicineFinder: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [medicineName]);
+  }, [medicineName, personalizationData]);
 
   return (
     <div className="space-y-6">

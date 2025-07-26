@@ -1,4 +1,4 @@
-import type { MedicineAnalysisResult, LabAnalysisResult, DoshaAnalysisResult } from '../types';
+import type { MedicineAnalysisResult, LabAnalysisResult, DoshaAnalysisResult, PersonalizationData, ContactDetails } from '../types';
 
 interface LabInput {
   text?: string;
@@ -10,9 +10,9 @@ interface LabInput {
 
 const BACKEND_URL = ''; 
 
-async function fetchFromApi(body: object) {
+async function fetchFromApi(endpoint: string, body: object) {
   try {
-    const response = await fetch(`${BACKEND_URL}/api/gemini`, {
+    const response = await fetch(`${BACKEND_URL}${endpoint}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -32,23 +32,30 @@ async function fetchFromApi(body: object) {
   }
 }
 
-export async function getHerbSuggestionForMedicine(medicineName: string): Promise<MedicineAnalysisResult> {
-  return fetchFromApi({
+export async function getHerbSuggestionForMedicine(medicineName: string, personalization: PersonalizationData): Promise<MedicineAnalysisResult> {
+  return fetchFromApi('/api/gemini', {
     type: 'medicine',
     medicineName,
+    personalization,
   });
 }
 
-export async function analyzeLabReport(input: LabInput): Promise<LabAnalysisResult> {
-   return fetchFromApi({
+export async function analyzeLabReport(input: LabInput, personalization: PersonalizationData): Promise<LabAnalysisResult> {
+   return fetchFromApi('/api/gemini', {
     type: 'lab',
     input,
+    personalization,
   });
 }
 
-export async function identifyDosha(answers: Record<string, string>): Promise<DoshaAnalysisResult> {
-  return fetchFromApi({
+export async function identifyDosha(answers: Record<string, string>, personalization: PersonalizationData): Promise<DoshaAnalysisResult> {
+  return fetchFromApi('/api/gemini', {
     type: 'dosha',
     answers,
+    personalization,
   });
+}
+
+export async function contactExpert(details: ContactDetails): Promise<{ message: string }> {
+  return fetchFromApi('/api/contact', details);
 }

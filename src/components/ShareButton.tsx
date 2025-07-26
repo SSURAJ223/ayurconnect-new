@@ -15,22 +15,19 @@ export const ShareButton: React.FC<ShareButtonProps> = ({ textToShare, shareTitl
     const shareData = {
       title: shareTitle,
       text: textToShare,
-      url: window.location.href, // Sharing a link to the app itself is good practice
+      url: window.location.href,
     };
 
     if (canShare) {
       try {
         await navigator.share(shareData);
-        // The native share UI provides feedback, so we don't need our own state change.
       } catch (err) {
-        // If the user cancels the share dialog, an AbortError is thrown. We can safely ignore it.
         if ((err as DOMException).name !== 'AbortError') {
           console.error('Share API failed, falling back to copy:', err);
           await copyToClipboard();
         }
       }
     } else {
-      // Fallback for browsers that don't support the Web Share API
       await copyToClipboard();
     }
   };
@@ -42,7 +39,6 @@ export const ShareButton: React.FC<ShareButtonProps> = ({ textToShare, shareTitl
         setTimeout(() => setDidCopy(false), 2500);
     } catch (err) {
         console.error('Failed to copy using clipboard API:', err);
-        // Fallback for non-secure contexts or older browsers
         const textArea = document.createElement("textarea");
         textArea.value = textToShare;
         textArea.style.position = "absolute";

@@ -3,7 +3,7 @@ import { getHerbSuggestionForMedicine } from '../services/geminiService';
 import type { MedicineAnalysisResult } from '../types';
 import { ResultCard } from './ResultCard';
 import { Spinner } from './Spinner';
-import { SearchIcon } from './icons';
+import { SearchIcon } from './icons/SearchIcon';
 import { LifestyleCard } from './LifestyleCard';
 import { ShareButton } from './ShareButton';
 
@@ -60,8 +60,7 @@ export const MedicineFinder: React.FC = () => {
       setResult(analysis);
       setMedicineName('');
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      setError(`Failed to get suggestion. Please check your connection or try again later. Server response: ${message}`);
+      setError('Failed to get suggestion. Please check your connection or try again later.');
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -71,7 +70,6 @@ export const MedicineFinder: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold text-gray-800">Find a Complementary Herb</h2>
         <p className="text-gray-600 mt-1">
           Enter an allopathic medicine or molecule name to discover Ayurvedic herbs that can support your treatment.
         </p>

@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 export const ClipboardCheckIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (

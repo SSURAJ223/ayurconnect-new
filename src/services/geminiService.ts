@@ -9,7 +9,8 @@ interface LabInput {
   };
 }
 
-const BACKEND_URL = 'https://ayurconnect-new-backend.onrender.com'; 
+// The backend URL is now relative, assuming the frontend and backend are served from the same domain.
+const BACKEND_URL = ''; 
 
 /**
  * A helper function to call our secure backend proxy.

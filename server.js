@@ -101,37 +101,31 @@ const labReportSchema = {
 const doshaSchema = {
     type: Type.OBJECT,
     properties: {
-        dominantDosha: { type: Type.STRING, description: "The user's dominant Dosha (e.g., Vata, Pitta, Kapha, Vata-Pitta)." },
-        doshaDescription: { type: Type.STRING, description: "A detailed description of the dominant Dosha, its qualities, and manifestations." },
-        herbSuggestions: {
-            type: Type.ARRAY,
-            description: "A list of suggested Ayurvedic herbs to balance the identified Dosha.",
-            items: {
-                type: Type.OBJECT,
-                properties: {
-                    name: { type: Type.STRING, description: "Name of the Ayurvedic herb." },
-                    benefits: { type: Type.STRING, description: "Key benefits of the herb for balancing the specific Dosha." },
-                    usage: { type: Type.STRING, description: "Recommended method of consumption or use." },
-                    source: { type: Type.STRING, description: "Citation from a classical Ayurvedic text, including the text name and chapter/verse (e.g., 'Charaka Samhita, Sutrasthana 25')." }
+        dosha: { type: Type.STRING, description: "The dominant dosha identified (e.g., 'Vata', 'Pitta', 'Kapha', or a combination like 'Vata-Pitta')." },
+        explanation: { type: Type.STRING, description: "A detailed explanation of the characteristics of this dosha, drawing from Ayurvedic principles from sources like the Sushruta Samhita." },
+        recommendations: {
+            type: Type.OBJECT,
+            properties: {
+                diet: {
+                    type: Type.ARRAY,
+                    description: "List of 3-4 specific dietary recommendations based on Rasayana principles to balance this dosha. These should be actionable (e.g., 'Favor warm, moist foods like soups and stews.').",
+                    items: { type: Type.STRING }
                 },
-                required: ["name", "benefits", "usage", "source"]
-            }
+                lifestyle: {
+                    type: Type.ARRAY,
+                    description: "List of 3-4 specific lifestyle recommendations based on Rasayana principles (e.g., 'Maintain a regular daily routine, including consistent meal and sleep times.').",
+                    items: { type: Type.STRING }
+                }
+            },
+            required: ["diet", "lifestyle"]
         },
-        lifestyleSuggestions: {
-            type: Type.ARRAY,
-            description: "A list of suggested lifestyle modifications (diet, routine, exercise).",
-            items: {
-                type: Type.OBJECT,
-                properties: {
-                    suggestion: { type: Type.STRING, description: "The specific lifestyle recommendation." },
-                    reasoning: { type: Type.STRING, description: "The reasoning behind how this suggestion helps balance the Dosha." },
-                    source: { type: Type.STRING, description: "Citation from a classical Ayurvedic text (e.g., 'Ashtanga Hrudayam, Dinacharya')." }
-                },
-                required: ["suggestion", "reasoning", "source"]
-            }
+        sources: {
+             type: Type.ARRAY,
+             description: "A list of sources cited for the information provided. E.g., 'Sushruta Samhita, Sutrasthanam, Chap. XV', 'Puri, H.S. Rasayana, Ayurvedic herbs for longevity and rejuvenation'.",
+             items: { type: Type.STRING }
         }
     },
-    required: ["dominantDosha", "doshaDescription", "herbSuggestions", "lifestyleSuggestions"]
+    required: ["dosha", "explanation", "recommendations", "sources"]
 };
 
 
@@ -172,18 +166,25 @@ app.post('/api/gemini', async (req, res) => {
                 res.status(200).json(JSON.parse(responseText));
             }
         } else if (type === 'dosha') {
-            const prompt = `You are a world-renowned Ayurvedic Vaidya (physician). A user has completed a questionnaire about their physical, metabolic, and mental characteristics. Their answers are provided in this JSON object: ${JSON.stringify(data.answers)}. Based on these answers, perform the following tasks:
-1.  Determine the user's dominant Prakriti (Dosha constitution), such as Vata, Pitta, Kapha, or a combination like Vata-Pitta.
-2.  Provide a detailed description of this dominant Dosha, explaining its core qualities and how they manifest.
-3.  Suggest 2-3 Ayurvedic herbs that are beneficial for balancing this Dosha. For each herb, provide its name, its key benefits for the Dosha, recommended usage, and a specific citation from a classical Ayurvedic text (e.g., Charaka Samhita, Sushruta Samhita, Ashtanga Hrudayam by Vagbhata). The citation must include the text name and chapter/verse if possible (e.g., 'Charaka Samhita, Chikitsa Sthana, 1.2').
-4.  Recommend 2-3 lifestyle changes (including diet/Dinacharya and exercise/Vyayama). For each suggestion, explain the reasoning and provide a citation from a classical text, similar to the herb suggestions.
-IMPORTANT: Your entire response must be a single JSON object conforming to the provided schema. Do not include any text outside the JSON structure.`;
+            const prompt = `You are an expert Ayurvedic practitioner with knowledge from classical texts like the Sushruta Samhita and modern interpretations like H.S. Puri's "Rasayana". Based on the following user-provided characteristics, identify their dominant dosha (Prakriti).
+            
+            User's characteristics: ${JSON.stringify(data.answers, null, 2)}
+            
+            Your task is to:
+            1.  Analyze the inputs and determine the most likely dominant dosha (Vata, Pitta, Kapha, or a combination if strongly indicated).
+            2.  Provide a clear, concise explanation of the identified dosha's qualities and tendencies, referencing the core elements (ether, air, fire, water, earth).
+            3.  Offer 3-4 specific dietary recommendations and 3-4 lifestyle recommendations based on Rasayana principles to maintain balance for this dosha.
+            4.  Cite your sources where appropriate, such as "(Sushruta Samhita, Sutrasthanam)" or "(Puri, H.S. Rasayana)".
+            
+            IMPORTANT: Structure your entire response as a single JSON object that conforms to the provided schema. Do not add any text outside of the JSON object.`;
+
             const response = await ai.models.generateContent({
                 model: "gemini-2.5-flash",
                 contents: prompt,
                 config: { responseMimeType: "application/json", responseSchema: doshaSchema },
             });
             res.status(200).json(JSON.parse(response.text));
+
         } else {
             res.status(400).json({ error: 'Invalid request type' });
         }

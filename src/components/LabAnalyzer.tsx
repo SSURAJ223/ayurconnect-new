@@ -3,7 +3,9 @@ import { analyzeLabReport } from '../services/geminiService';
 import type { LabAnalysisResult } from '../types';
 import { ResultCard } from './ResultCard';
 import { Spinner } from './Spinner';
-import { ClipboardCheckIcon, UploadIcon, AlertTriangleIcon } from './icons';
+import { ClipboardCheckIcon } from './icons/ClipboardCheckIcon';
+import { UploadIcon } from './icons/UploadIcon';
+import { AlertTriangleIcon } from './icons/AlertTriangleIcon';
 import { LifestyleCard } from './LifestyleCard';
 import { ShareButton } from './ShareButton';
 
@@ -152,7 +154,13 @@ export const LabAnalyzer: React.FC = () => {
           image: imagePart || undefined
       });
 
-      setResults(analysis);
+      const potentialError = analysis as any;
+      if (Array.isArray(potentialError) && potentialError.length > 0 && potentialError[0].error) {
+        setError(potentialError[0].error);
+        setResults(null);
+      } else {
+        setResults(analysis);
+      }
       
       setReportData('');
       setSelectedFile(null);
@@ -160,8 +168,7 @@ export const LabAnalyzer: React.FC = () => {
       if (fileInput) fileInput.value = '';
 
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      setError(`Failed to analyze the report. Please check the data or file and try again. Server response: ${message}`);
+      setError('Failed to analyze the report. Please check the data or file and try again.');
       console.error(err);
     } finally {
       setIsLoading(false);
@@ -172,7 +179,6 @@ export const LabAnalyzer: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold text-gray-800">Analyse Lab Report</h2>
         <p className="text-gray-600 mt-1">
           Paste your lab report data or upload an image/PDF file to get insights and Ayurvedic suggestions.
         </p>

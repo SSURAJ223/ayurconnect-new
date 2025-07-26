@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 export const SearchIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
@@ -7,3 +6,4 @@ export const SearchIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <line x1="21" y1="21" x2="16.65" y2="16.65" />
   </svg>
 );
+

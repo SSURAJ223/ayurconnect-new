@@ -3,7 +3,7 @@ import { contactExpert } from '../services/geminiService';
 import type { ContactDetails } from '../types';
 import { Spinner } from './Spinner';
 import { XIcon } from './icons/XIcon';
-import { MailIcon } from './icons/MailIcon';
+import { SendIcon } from './icons/SendIcon';
 import { CheckCircleIcon } from './icons/CheckCircleIcon';
 
 interface ConnectModalProps {
@@ -45,8 +45,8 @@ export const ConnectModal: React.FC<ConnectModalProps> = ({ onClose }) => {
         
         <div className="hidden md:block md:w-5/12">
             <img 
-                src="https://images.unsplash.com/photo-1620188461705-5910326b5285?q=80&w=800&auto=format&fit=crop"
-                alt="Friendly Ayurvedic Doctor"
+                src="https://images.unsplash.com/photo-1622253692010-333f2da6031d?q=80&w=800&auto=format&fit=crop"
+                alt="Consult with a professional Ayurvedic doctor"
                 className="w-full h-full object-cover"
                 onError={(e) => { e.currentTarget.src = 'https://picsum.photos/400/600' }}
             />
@@ -89,7 +89,7 @@ export const ConnectModal: React.FC<ConnectModalProps> = ({ onClose }) => {
                   </div>
                   {error && <p className="text-red-600 text-sm">{error}</p>}
                   <button type="submit" disabled={isLoading} className="w-full flex items-center justify-center px-6 py-3 bg-emerald-600 text-white font-bold rounded-full hover:bg-emerald-700 disabled:bg-gray-400 transition-all duration-200 shadow-lg hover:shadow-xl disabled:shadow-none">
-                    {isLoading ? <Spinner /> : <><MailIcon className="w-5 h-5 mr-2" /> Submit Request</>}
+                    {isLoading ? <Spinner /> : <><SendIcon className="w-5 h-5 mr-2" /> Submit Request</>}
                   </button>
                 </form>
               </>

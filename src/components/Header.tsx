@@ -1,6 +1,6 @@
 import React from 'react';
 import { LeafIcon } from './icons/LeafIcon';
-import { MailIcon } from './icons/MailIcon';
+import { ConsultationIcon } from './icons/ConsultationIcon';
 
 interface HeaderProps {
     onTalkToDoctorClick: () => void;
@@ -19,9 +19,9 @@ export const Header: React.FC<HeaderProps> = ({ onTalkToDoctorClick }) => {
         </div>
          <button
           onClick={onTalkToDoctorClick}
-          className="hidden sm:inline-flex items-center px-4 py-2 bg-emerald-600 text-white text-sm font-bold rounded-full shadow-lg hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all transform hover:scale-105"
+          className="hidden sm:inline-flex items-center px-6 py-3 bg-emerald-600 text-white text-base font-bold rounded-full shadow-xl hover:bg-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-all transform hover:scale-105 hover:shadow-2xl"
         >
-          <MailIcon className="w-5 h-5 mr-2" />
+          <ConsultationIcon className="w-5 h-5 mr-2" />
           Talk to an Ayurvedic Doctor
         </button>
       </div>

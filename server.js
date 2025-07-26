@@ -12,10 +12,10 @@ const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 const app = express();
 const port = process.env.PORT || 10000;
 
-// Enable CORS for all routes. This is crucial for allowing cross-domain requests.
+// Enable CORS for all routes.
 app.use(cors());
 
-app.use(express.json({ limit: '50mb' })); // Use express's body parser for JSON
+app.use(express.json({ limit: '50mb' }));
 
 // --- Start of AI Logic ---
 

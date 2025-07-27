@@ -11,6 +11,7 @@ import { BottomNav } from './components/BottomNav';
 import { MedicineIcon } from './components/icons/MedicineIcon';
 import { ReportIcon } from './components/icons/ReportIcon';
 import { DoshaIcon } from './components/icons/DoshaIcon';
+import { AppSummary } from './components/AppSummary';
 
 type ActiveView = 'medicine' | 'lab' | 'dosha';
 
@@ -22,6 +23,8 @@ const App: React.FC = () => {
     gender: '',
     context: ''
   });
+
+  const handleTalkToDoctorClick = () => setIsConnectModalOpen(true);
 
   const renderActiveView = () => {
     switch (activeView) {
@@ -51,9 +54,10 @@ const App: React.FC = () => {
 
   return (
     <div className="font-sans text-gray-800 pb-24 lg:pb-0">
-      <Header onTalkToDoctorClick={() => setIsConnectModalOpen(true)} />
+      <Header onTalkToDoctorClick={handleTalkToDoctorClick} />
       
       <main className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
+        <AppSummary />
         <PersonalizationForm data={personalizationData} setData={setPersonalizationData} />
 
         <div className="flex flex-col lg:flex-row gap-8">
@@ -103,7 +107,11 @@ const App: React.FC = () => {
           </p>
       </footer>
       
-      <BottomNav activeView={activeView} setActiveView={setActiveView} />
+      <BottomNav 
+        activeView={activeView} 
+        setActiveView={setActiveView} 
+        onTalkToDoctorClick={handleTalkToDoctorClick} 
+      />
 
       {isConnectModalOpen && <ConnectModal onClose={() => setIsConnectModalOpen(false)} />}
     </div>

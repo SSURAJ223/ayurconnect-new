@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { analyzeLabReport } from '../services/geminiService';
-import type { LabAnalysisResult, PersonalizationData } from '../types';
+import type { LabAnalysisResult, PersonalizationData, HerbSuggestion } from '../types';
 import { ResultCard } from './ResultCard';
 import { Spinner } from './Spinner';
 import { ClipboardCheckIcon } from './icons/ClipboardCheckIcon';
@@ -62,9 +62,11 @@ const ACCEPTED_FILE_TYPES_STRING = 'image/png, image/jpeg, application/pdf';
 
 interface LabAnalyzerProps {
   personalizationData: PersonalizationData;
+  cart: HerbSuggestion[];
+  onAddToCart: (item: HerbSuggestion) => void;
 }
 
-export const LabAnalyzer: React.FC<LabAnalyzerProps> = ({ personalizationData }) => {
+export const LabAnalyzer: React.FC<LabAnalyzerProps> = ({ personalizationData, cart, onAddToCart }) => {
   const [reportData, setReportData] = useState<string>('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [results, setResults] = useState<LabAnalysisResult | null>(null);
@@ -214,8 +216,8 @@ export const LabAnalyzer: React.FC<LabAnalyzerProps> = ({ personalizationData })
               <ShareButton textToShare={formatLabResultForSharing(results)} shareTitle="AyurConnect AI: Lab Report Analysis" />
             </div>
           {results.length > 0 ? (
-            results.map((finding, index) => (
-              <div key={index} className="bg-orange-50/50 p-4 sm:p-5 rounded-2xl border border-orange-200/80">
+            results.map((finding) => (
+              <div key={finding.parameter} className="bg-orange-50/50 p-4 sm:p-5 rounded-2xl border border-orange-200/80">
                 <div className="flex items-start mb-3">
                   <div className="p-2 bg-orange-100 rounded-full mr-4"><AlertTriangleIcon className="w-6 h-6 text-orange-500" /></div>
                   <div>
@@ -230,7 +232,7 @@ export const LabAnalyzer: React.FC<LabAnalyzerProps> = ({ personalizationData })
                     <div>
                       <h5 className="font-display font-bold text-gray-800 mb-2 mt-4">Herb Suggestions</h5>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {finding.herbSuggestions.map((item, subIndex) => ( <ResultCard key={subIndex} suggestion={item} /> ))}
+                        {finding.herbSuggestions.map((item) => ( <ResultCard key={item.id} suggestion={item} cart={cart} onAddToCart={onAddToCart} /> ))}
                       </div>
                     </div>
                    )}

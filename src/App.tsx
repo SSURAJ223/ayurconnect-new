@@ -4,7 +4,7 @@ import { MedicineFinder } from './components/MedicineFinder';
 import { LabAnalyzer } from './components/LabAnalyzer';
 import { DoshaIdentifier } from './components/DoshaIdentifier';
 import { NavCard } from './components/NavCard';
-import type { PersonalizationData } from './types';
+import type { PersonalizationData, HerbSuggestion } from './types';
 import { PersonalizationForm } from './components/PersonalizationForm';
 import { ConnectModal } from './components/ConnectModal';
 import { BottomNav } from './components/BottomNav';
@@ -12,6 +12,9 @@ import { MedicineIcon } from './components/icons/MedicineIcon';
 import { ReportIcon } from './components/icons/ReportIcon';
 import { DoshaIcon } from './components/icons/DoshaIcon';
 import { AppSummary } from './components/AppSummary';
+import { CartFAB } from './components/CartFAB';
+import { CartModal } from './components/CartModal';
+
 
 type ActiveView = 'medicine' | 'lab' | 'dosha';
 
@@ -23,19 +26,31 @@ const App: React.FC = () => {
     gender: '',
     context: ''
   });
+  const [cart, setCart] = useState<HerbSuggestion[]>([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
+
+  const handleAddToCart = (item: HerbSuggestion) => {
+      if (!cart.some(cartItem => cartItem.id === item.id)) {
+        setCart(prev => [...prev, item]);
+      }
+  };
+
+  const handleRemoveFromCart = (itemId: string) => {
+    setCart(prev => prev.filter(item => item.id !== itemId));
+  };
 
   const handleTalkToDoctorClick = () => setIsConnectModalOpen(true);
 
   const renderActiveView = () => {
     switch (activeView) {
       case 'medicine':
-        return <MedicineFinder personalizationData={personalizationData} />;
+        return <MedicineFinder personalizationData={personalizationData} cart={cart} onAddToCart={handleAddToCart} />;
       case 'lab':
-        return <LabAnalyzer personalizationData={personalizationData} />;
+        return <LabAnalyzer personalizationData={personalizationData} cart={cart} onAddToCart={handleAddToCart} />;
       case 'dosha':
         return <DoshaIdentifier personalizationData={personalizationData} />;
       default:
-        return <MedicineFinder personalizationData={personalizationData} />;
+        return <MedicineFinder personalizationData={personalizationData} cart={cart} onAddToCart={handleAddToCart} />;
     }
   };
 
@@ -112,8 +127,16 @@ const App: React.FC = () => {
         setActiveView={setActiveView} 
         onTalkToDoctorClick={handleTalkToDoctorClick} 
       />
+      
+      <CartFAB cartItemCount={cart.length} onClick={() => setIsCartOpen(true)} />
 
       {isConnectModalOpen && <ConnectModal onClose={() => setIsConnectModalOpen(false)} />}
+      <CartModal
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        cartItems={cart}
+        onRemoveItem={handleRemoveFromCart}
+      />
     </div>
   );
 };

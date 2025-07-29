@@ -1,4 +1,5 @@
 export interface HerbSuggestion {
+  id: string;
   name: string;
   summary: string;
   dosage: string;

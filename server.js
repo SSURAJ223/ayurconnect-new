@@ -108,13 +108,14 @@ const medicineSchema = {
             items: {
                 type: Type.OBJECT,
                 properties: {
+                    id: { type: Type.STRING, description: "A unique ID for the herb, created by lowercasing the name and replacing spaces with hyphens. E.g., 'ashwagandha'." },
                     name: { type: Type.STRING, description: "Name of the Ayurvedic herb." },
                     summary: { type: Type.STRING, description: "Summary of the herb's benefits, particularly in relation to the drug's purpose and the user's context." },
                     dosage: { type: Type.STRING, description: "Recommended dosage. E.g., '1-2 tablets twice a day'." },
                     form: { type: Type.STRING, description: "Common form of consumption. E.g., 'Powder, Tablet'." },
                     sideEffects: { type: Type.STRING, description: "Potential side effects or precautions. Mention 'Consult a doctor' if applicable." }
                 },
-                required: ["name", "summary", "dosage", "form", "sideEffects"]
+                required: ["id", "name", "summary", "dosage", "form", "sideEffects"]
             }
         },
         lifestyleSuggestions: {
@@ -148,13 +149,14 @@ const labReportSchema = {
                 items: {
                     type: Type.OBJECT,
                     properties: {
+                        id: { type: Type.STRING, description: "A unique ID for the herb, created by lowercasing the name and replacing spaces with hyphens. E.g., 'arjuna-bark'." },
                         name: { type: Type.STRING, description: "Name of the Ayurvedic herb." },
                         summary: { type: Type.STRING, description: "Summary of the herb's benefits related to the finding." },
                         dosage: { type: Type.STRING, description: "Recommended dosage." },
                         form: { type: Type.STRING, description: "Common form of consumption." },
                         sideEffects: { type: Type.STRING, description: "Potential side effects or precautions." }
                     },
-                    required: ["name", "summary", "dosage", "form", "sideEffects"]
+                    required: ["id", "name", "summary", "dosage", "form", "sideEffects"]
                 }
             },
             lifestyleSuggestions: {
@@ -211,7 +213,7 @@ app.post('/api/gemini', async (req, res) => {
         const { type, ...data } = req.body;
 
         if (type === 'medicine') {
-            const prompt = `You are an expert AI assistant with deep knowledge in both allopathic medicine and Ayurveda. Your Ayurvedic knowledge MUST be strictly based on authoritative classical texts (e.g., Charaka Samhita, Sushruta Samhita) and standard BAMS (Bachelor of Ayurvedic Medicine and Surgery) course books. Do NOT use generic, non-classical, or web-based interpretations. A user has provided the following details: Age: ${data.personalization?.age || 'Not provided'}, Gender: ${data.personalization?.gender || 'Not provided'}, Known Allergies/Symptoms: "${data.personalization?.context || 'None'}". They are taking the allopathic medicine: "${data.medicineName}". Your task is to provide personalized complementary suggestions. Follow these instructions precisely: 1. Provide a brief, easy-to-understand summary of the allopathic drug. 2. Suggest 2-3 complementary Ayurvedic herbs, ensuring they are appropriate for the user's context. 3. Provide 2-3 relevant lifestyle suggestions, tailored to the user. For lifestyle suggestions, cite the Ayurvedic principle in the 'source' field. IMPORTANT: In your summaries and suggestions, clearly state how the recommendation is personalized if applicable (e.g., "Given your age..."). Structure your entire response as a single JSON object that conforms to the provided schema. Do not add any text outside of the JSON object.`;
+            const prompt = `You are an expert AI assistant with deep knowledge in both allopathic medicine and Ayurveda. Your Ayurvedic knowledge MUST be strictly based on authoritative classical texts (e.g., Charaka Samhita, Sushruta Samhita) and standard BAMS (Bachelor of Ayurvedic Medicine and Surgery) course books. Do NOT use generic, non-classical, or web-based interpretations. A user has provided the following details: Age: ${data.personalization?.age || 'Not provided'}, Gender: ${data.personalization?.gender || 'Not provided'}, Known Allergies/Symptoms: "${data.personalization?.context || 'None'}". They are taking the allopathic medicine: "${data.medicineName}". Your task is to provide personalized complementary suggestions. Follow these instructions precisely: 1. Provide a brief, easy-to-understand summary of the allopathic drug. 2. Suggest 2-3 complementary Ayurvedic herbs, ensuring they are appropriate for the user's context. For each herb, generate a unique 'id' by lowercasing its name and replacing spaces with hyphens (e.g., 'ashwagandha', 'brahmi-powder'). 3. Provide 2-3 relevant lifestyle suggestions, tailored to the user. For lifestyle suggestions, cite the Ayurvedic principle in the 'source' field. IMPORTANT: In your summaries and suggestions, clearly state how the recommendation is personalized if applicable (e.g., "Given your age..."). Structure your entire response as a single JSON object that conforms to the provided schema. Do not add any text outside of the JSON object.`;
             const response = await ai.models.generateContent({
                 model: "gemini-2.5-flash",
                 contents: prompt,
@@ -220,7 +222,7 @@ app.post('/api/gemini', async (req, res) => {
             res.status(200).json(JSON.parse(response.text));
 
         } else if (type === 'lab') {
-            const systemInstruction = `You are an expert AI assistant specializing in analyzing medical lab reports from both an allopathic and Ayurvedic perspective. Your Ayurvedic knowledge MUST be strictly based on authoritative classical texts (e.g., Charaka Samhita, Sushruta Samhita) and standard BAMS (Bachelor of Ayurvedic Medicine and Surgery) course books. Do NOT use generic, non-classical, or web-based interpretations. Your task is to analyze the provided lab report data for a user with these details: Age: ${data.personalization?.age || 'Not provided'}, Gender: ${data.personalization?.gender || 'Not provided'}, Known Allergies/Symptoms: "${data.personalization?.context || 'None'}". Follow these instructions carefully: 1. Identify key biomarkers that are out of the standard normal range. 2. For EACH biomarker that is out of range, create a distinct finding object. 3. If all biomarkers are within the normal range, return an empty array. 4. For each finding, provide a simple summary. 5. For each finding, suggest 1-2 complementary Ayurvedic herbs that could help, tailoring them to the user's context. 6. For each finding, suggest 1-2 relevant lifestyle modifications, also tailored to the user. For lifestyle suggestions, cite the Ayurvedic principle in the 'source' field. IMPORTANT: Clearly state how recommendations are personalized. Your response MUST be a single JSON array of finding objects that conforms to the provided schema. Do not include any text outside of the JSON array.`;
+            const systemInstruction = `You are an expert AI assistant specializing in analyzing medical lab reports from both an allopathic and Ayurvedic perspective. Your Ayurvedic knowledge MUST be strictly based on authoritative classical texts (e.g., Charaka Samhita, Sushruta Samhita) and standard BAMS (Bachelor of Ayurvedic Medicine and Surgery) course books. Do NOT use generic, non-classical, or web-based interpretations. Your task is to analyze the provided lab report data for a user with these details: Age: ${data.personalization?.age || 'Not provided'}, Gender: ${data.personalization?.gender || 'Not provided'}, Known Allergies/Symptoms: "${data.personalization?.context || 'None'}". Follow these instructions carefully: 1. Identify key biomarkers that are out of the standard normal range. 2. For EACH biomarker that is out of range, create a distinct finding object. 3. If all biomarkers are within the normal range, return an empty array. 4. For each finding, provide a simple summary. 5. For each finding, suggest 1-2 complementary Ayurvedic herbs that could help, tailoring them to the user's context. For each herb, generate a unique 'id' by lowercasing its name and replacing spaces with hyphens (e.g., 'ashwagandha', 'arjuna-bark'). 6. For each finding, suggest 1-2 relevant lifestyle modifications, also tailored to the user. For lifestyle suggestions, cite the Ayurvedic principle in the 'source' field. IMPORTANT: Clearly state how recommendations are personalized. Your response MUST be a single JSON array of finding objects that conforms to the provided schema. Do not include any text outside of the JSON array.`;
             const parts = [];
             if (data.input.text) {
                 parts.push({ text: `Here is the lab report data:\n\n${data.input.text}` });

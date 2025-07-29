@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { getHerbSuggestionForMedicine } from '../services/geminiService';
-import type { MedicineAnalysisResult, PersonalizationData } from '../types';
+import type { MedicineAnalysisResult, PersonalizationData, HerbSuggestion } from '../types';
 import { ResultCard } from './ResultCard';
 import { Spinner } from './Spinner';
 import { SearchIcon } from './icons/SearchIcon';
@@ -34,9 +34,11 @@ const formatMedicineResultForSharing = (result: MedicineAnalysisResult): string 
 
 interface MedicineFinderProps {
   personalizationData: PersonalizationData;
+  cart: HerbSuggestion[];
+  onAddToCart: (item: HerbSuggestion) => void;
 }
 
-export const MedicineFinder: React.FC<MedicineFinderProps> = ({ personalizationData }) => {
+export const MedicineFinder: React.FC<MedicineFinderProps> = ({ personalizationData, cart, onAddToCart }) => {
   const [medicineName, setMedicineName] = useState<string>('');
   const [result, setResult] = useState<MedicineAnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -115,8 +117,13 @@ export const MedicineFinder: React.FC<MedicineFinderProps> = ({ personalizationD
             <div>
               <h4 className="font-display text-lg font-bold text-gray-700 mb-3">Complementary Herb Suggestions</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {result.herbSuggestions.map((suggestion, index) => (
-                  <ResultCard key={index} suggestion={suggestion} />
+                {result.herbSuggestions.map((suggestion) => (
+                  <ResultCard 
+                    key={suggestion.id} 
+                    suggestion={suggestion} 
+                    onAddToCart={onAddToCart}
+                    cart={cart}
+                  />
                 ))}
               </div>
             </div>

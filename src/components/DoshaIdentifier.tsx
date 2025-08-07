@@ -1,6 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { identifyDosha } from '../services/geminiService';
-import type { DoshaAnalysisResult, PersonalizationData } from '../types';
+import type { DoshaAnalysisResult, PersonalizationData, HerbSuggestion } from '../types';
 import { Spinner } from './Spinner';
 import { DoshaResult } from './DoshaResult';
 import { DoshaIcon } from './icons/DoshaIcon';
@@ -24,10 +24,13 @@ const questions: Question[] = [
 
 interface DoshaIdentifierProps {
   personalizationData: PersonalizationData;
+  cart: HerbSuggestion[];
+  onAddToCart: (item: HerbSuggestion) => void;
 }
 
-export const DoshaIdentifier: React.FC<DoshaIdentifierProps> = ({ personalizationData }) => {
+export const DoshaIdentifier: React.FC<DoshaIdentifierProps> = ({ personalizationData, cart, onAddToCart }) => {
   const [answers, setAnswers] = useState<Record<string, Answer>>({});
+  const [freeText, setFreeText] = useState('');
   const [result, setResult] = useState<DoshaAnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,7 +43,7 @@ export const DoshaIdentifier: React.FC<DoshaIdentifierProps> = ({ personalizatio
 
   const handleSubmit = useCallback(async () => {
     if (!isComplete) {
-      setError('Please answer all questions to identify your dosha.');
+      setError('Please answer all questions to identify your Dosha.');
       return;
     }
     setIsLoading(true);
@@ -48,21 +51,21 @@ export const DoshaIdentifier: React.FC<DoshaIdentifierProps> = ({ personalizatio
     setResult(null);
 
     try {
-      const analysis = await identifyDosha(answers as Record<string, string>, personalizationData);
+      const analysis = await identifyDosha(answers as Record<string, string>, freeText, personalizationData);
       setResult(analysis);
     } catch (err) {
-      setError('Failed to identify dosha. Please try again later.');
+      setError('Failed to identify your Dosha. Please try again later.');
       console.error(err);
     } finally {
       setIsLoading(false);
     }
-  }, [answers, isComplete, personalizationData]);
+  }, [answers, freeText, isComplete, personalizationData]);
 
   return (
     <div className="space-y-6">
        {!result && (
         <div className="space-y-8">
-            <p className="text-gray-600 mt-1">Answer these questions about your tendencies to discover your primary Ayurvedic constitution.</p>
+            <p className="text-gray-600 mt-1">Answer a few questions to discover your dominant Dosha and get personalized wellness tips.</p>
             {questions.map((q) => (
                 <div key={q.key}>
                 <p className="font-display font-semibold text-gray-700 mb-3">{q.text}</p>
@@ -83,12 +86,22 @@ export const DoshaIdentifier: React.FC<DoshaIdentifierProps> = ({ personalizatio
                 </div>
                 </div>
             ))}
+             <div>
+                <p className="font-display font-semibold text-gray-700 mb-3">Optionally, add more details.</p>
+                <textarea
+                  value={freeText}
+                  onChange={(e) => setFreeText(e.target.value)}
+                  placeholder="Describe your physical and mental traits in your own words..."
+                  className="w-full h-24 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 transition bg-white"
+                  disabled={isLoading}
+                />
+            </div>
             <button
                 onClick={handleSubmit}
                 disabled={isLoading || !isComplete}
                 className="w-full flex items-center justify-center px-6 py-3 bg-emerald-600 text-white font-bold rounded-full hover:bg-emerald-700 disabled:bg-gray-400 transition-all duration-200 shadow-lg hover:shadow-xl disabled:shadow-none"
             >
-                {isLoading ? <Spinner /> : <><DoshaIcon className="w-5 h-5 mr-2" />Identify My Dosha</>}
+                {isLoading ? <Spinner /> : <><DoshaIcon className="w-5 h-5 mr-2" />Find My Dosha</>}
             </button>
         </div>
       )}
@@ -99,9 +112,9 @@ export const DoshaIdentifier: React.FC<DoshaIdentifierProps> = ({ personalizatio
       
       {result && (
         <div className="animate-fade-in">
-          <DoshaResult result={result} />
+          <DoshaResult result={result} cart={cart} onAddToCart={onAddToCart} />
           <button
-            onClick={() => { setResult(null); setAnswers({}); }}
+            onClick={() => { setResult(null); setAnswers({}); setFreeText(''); }}
             className="mt-6 w-full text-center text-emerald-600 hover:text-emerald-800 font-semibold"
           >
             Start Over

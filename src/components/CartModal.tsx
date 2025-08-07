@@ -12,8 +12,8 @@ interface CartModalProps {
   onRemoveItem: (itemId: string) => void;
 }
 
-// TODO: Replace with the actual WhatsApp number
-const WHATSAPP_NUMBER = '919999999999'; // Example: Use country code without '+' or '00'
+// TODO: **IMPORTANT** Replace this with your actual WhatsApp business number, including the country code without the '+'.
+const WHATSAPP_NUMBER = '910000000000'; // Example for India. Use your own number.
 
 export const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose, cartItems, onRemoveItem }) => {
   if (!isOpen) return null;
@@ -23,7 +23,7 @@ export const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose, cartItems
     const itemList = cartItems.map(item => `- ${item.name}`).join('\n');
     const fullMessage = encodeURIComponent(header + itemList);
     const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${fullMessage}`;
-    window.open(whatsappUrl, '_blank');
+    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
   };
 
   return (

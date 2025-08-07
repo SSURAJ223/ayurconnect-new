@@ -8,6 +8,7 @@ import { UploadIcon } from './icons/UploadIcon';
 import { AlertTriangleIcon } from './icons/AlertTriangleIcon';
 import { LifestyleCard } from './LifestyleCard';
 import { ShareButton } from './ShareButton';
+import { ConsultationCTA } from './ConsultationCTA';
 
 const fileToBase64 = (file: File): Promise<string> =>
   new Promise((resolve, reject) => {
@@ -64,9 +65,10 @@ interface LabAnalyzerProps {
   personalizationData: PersonalizationData;
   cart: HerbSuggestion[];
   onAddToCart: (item: HerbSuggestion) => void;
+  onTalkToDoctorClick: () => void;
 }
 
-export const LabAnalyzer: React.FC<LabAnalyzerProps> = ({ personalizationData, cart, onAddToCart }) => {
+export const LabAnalyzer: React.FC<LabAnalyzerProps> = ({ personalizationData, cart, onAddToCart, onTalkToDoctorClick }) => {
   const [reportData, setReportData] = useState<string>('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [results, setResults] = useState<LabAnalysisResult | null>(null);
@@ -216,42 +218,45 @@ export const LabAnalyzer: React.FC<LabAnalyzerProps> = ({ personalizationData, c
               <ShareButton textToShare={formatLabResultForSharing(results)} shareTitle="AyurConnect AI: Lab Report Analysis" />
             </div>
           {results.length > 0 ? (
-            results.map((finding) => (
-              <div key={finding.parameter} className="bg-orange-50/50 p-4 sm:p-5 rounded-2xl border border-orange-200/80">
-                <div className="flex items-start mb-3">
-                  <div className="p-2 bg-orange-100 rounded-full mr-4"><AlertTriangleIcon className="w-6 h-6 text-orange-500" /></div>
-                  <div>
-                    <h4 className="font-display text-xl font-bold text-gray-800">{finding.parameter}</h4>
-                    <p className="font-semibold text-orange-600">{finding.status}</p>
+            <>
+              {results.map((finding) => (
+                <div key={finding.parameter} className="bg-orange-50/50 p-4 sm:p-5 rounded-2xl border border-orange-200/80">
+                  <div className="flex items-start mb-3">
+                    <div className="p-2 bg-orange-100 rounded-full mr-4"><AlertTriangleIcon className="w-6 h-6 text-orange-500" /></div>
+                    <div>
+                      <h4 className="font-display text-xl font-bold text-gray-800">{finding.parameter}</h4>
+                      <p className="font-semibold text-orange-600">{finding.status}</p>
+                    </div>
+                  </div>
+                  <div className="pl-0 sm:pl-16 space-y-4">
+                    <p className="text-gray-700">{finding.summary}</p>
+                    
+                    {finding.herbSuggestions && finding.herbSuggestions.length > 0 && (
+                      <div>
+                        <h5 className="font-display font-bold text-gray-800 mb-2 mt-4">Herb Suggestions</h5>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {finding.herbSuggestions.map((item) => ( <ResultCard key={item.id} suggestion={item} cart={cart} onAddToCart={onAddToCart} /> ))}
+                        </div>
+                      </div>
+                    )}
+                    {finding.lifestyleSuggestions && finding.lifestyleSuggestions.length > 0 && (
+                      <div>
+                        <h5 className="font-display font-bold text-gray-800 mb-2 mt-4">Lifestyle Recommendations</h5>
+                        <div className="space-y-3">
+                          {finding.lifestyleSuggestions.map((item, subIndex) => ( <LifestyleCard key={subIndex} suggestion={item} />))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
-                <div className="pl-0 sm:pl-16 space-y-4">
-                  <p className="text-gray-700">{finding.summary}</p>
-                  
-                   {finding.herbSuggestions && finding.herbSuggestions.length > 0 && (
-                    <div>
-                      <h5 className="font-display font-bold text-gray-800 mb-2 mt-4">Herb Suggestions</h5>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {finding.herbSuggestions.map((item) => ( <ResultCard key={item.id} suggestion={item} cart={cart} onAddToCart={onAddToCart} /> ))}
-                      </div>
-                    </div>
-                   )}
-                   {finding.lifestyleSuggestions && finding.lifestyleSuggestions.length > 0 && (
-                    <div>
-                      <h5 className="font-display font-bold text-gray-800 mb-2 mt-4">Lifestyle Recommendations</h5>
-                      <div className="space-y-3">
-                        {finding.lifestyleSuggestions.map((item, subIndex) => ( <LifestyleCard key={subIndex} suggestion={item} />))}
-                      </div>
-                    </div>
-                   )}
-                </div>
-              </div>
-            ))
+              ))}
+            </>
           ) : (
             <div className="bg-green-100 text-green-800 p-4 rounded-lg text-center">
               <p>Based on the provided data, all markers appear to be within normal ranges. No specific herb suggestions are needed at this time.</p>
             </div>
           )}
+          <ConsultationCTA onTalkToDoctorClick={onTalkToDoctorClick} />
         </div>
       )}
     </div>

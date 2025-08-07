@@ -217,7 +217,7 @@ app.post('/api/gemini', async (req, res) => {
             const response = await ai.models.generateContent({
                 model: "gemini-2.5-flash",
                 contents: prompt,
-                config: { responseMimeType: "application/json", responseSchema: medicineSchema },
+                config: { responseMimeType: "application/json", responseSchema: medicineSchema, seed: 42 },
             });
             res.status(200).json(JSON.parse(response.text));
 
@@ -234,7 +234,7 @@ app.post('/api/gemini', async (req, res) => {
             const response = await ai.models.generateContent({
                 model: "gemini-2.5-flash",
                 contents: { parts },
-                config: { responseMimeType: "application/json", responseSchema: labReportSchema, systemInstruction },
+                config: { responseMimeType: "application/json", responseSchema: labReportSchema, systemInstruction, seed: 42 },
             });
 
             const responseText = response.text.trim();
@@ -260,7 +260,7 @@ app.post('/api/gemini', async (req, res) => {
             const response = await ai.models.generateContent({
                 model: "gemini-2.5-flash",
                 contents: prompt,
-                config: { responseMimeType: "application/json", responseSchema: doshaSchema },
+                config: { responseMimeType: "application/json", responseSchema: doshaSchema, seed: 42 },
             });
             res.status(200).json(JSON.parse(response.text));
 

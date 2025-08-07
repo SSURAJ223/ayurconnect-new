@@ -31,16 +31,22 @@ interface DoshaIdentifierProps {
 
 export const DoshaIdentifier: React.FC<DoshaIdentifierProps> = ({ personalizationData, cart, onAddToCart, onTalkToDoctorClick }) => {
   const [answers, setAnswers] = useState<Record<string, Answer>>({});
-  const [freeText, setFreeText] = useState('');
+  const [customAnswers, setCustomAnswers] = useState<Record<string, string>>({});
   const [result, setResult] = useState<DoshaAnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleAnswer = (key: string, option: string) => {
     setAnswers(prev => ({ ...prev, [key]: option }));
+    setCustomAnswers(prev => ({ ...prev, [key]: '' })); // Clear custom answer
   };
 
-  const isComplete = questions.every(q => answers[q.key]);
+  const handleCustomAnswerChange = (key: string, value: string) => {
+    setCustomAnswers(prev => ({...prev, [key]: value}));
+    setAnswers(prev => ({...prev, [key]: null})); // Clear button answer
+  }
+
+  const isComplete = questions.every(q => !!answers[q.key] || !!customAnswers[q.key]);
 
   const handleSubmit = useCallback(async () => {
     if (!isComplete) {
@@ -51,8 +57,13 @@ export const DoshaIdentifier: React.FC<DoshaIdentifierProps> = ({ personalizatio
     setError(null);
     setResult(null);
 
+    const combinedAnswers = questions.reduce((acc, q) => {
+      acc[q.key] = customAnswers[q.key] || answers[q.key] || '';
+      return acc;
+    }, {} as Record<string, string>);
+
     try {
-      const analysis = await identifyDosha(answers as Record<string, string>, freeText, personalizationData);
+      const analysis = await identifyDosha(combinedAnswers, personalizationData);
       setResult(analysis);
     } catch (err) {
       setError('Failed to identify your Dosha. Please try again later.');
@@ -60,7 +71,7 @@ export const DoshaIdentifier: React.FC<DoshaIdentifierProps> = ({ personalizatio
     } finally {
       setIsLoading(false);
     }
-  }, [answers, freeText, isComplete, personalizationData]);
+  }, [answers, customAnswers, isComplete, personalizationData]);
 
   return (
     <div className="space-y-6">
@@ -68,35 +79,33 @@ export const DoshaIdentifier: React.FC<DoshaIdentifierProps> = ({ personalizatio
         <div className="space-y-8">
             <p className="text-gray-600 mt-1">Answer a few questions to discover your dominant Dosha and get personalized wellness tips.</p>
             {questions.map((q) => (
-                <div key={q.key}>
-                <p className="font-display font-semibold text-gray-700 mb-3">{q.text}</p>
-                <div className="flex flex-col sm:flex-row flex-wrap gap-2">
-                    {q.options.map(option => (
-                    <button
-                        key={option}
-                        onClick={() => handleAnswer(q.key, option)}
-                        className={`w-full sm:w-auto text-left sm:text-center px-4 py-3 text-sm rounded-lg border transition-all duration-200 ${
-                        answers[q.key] === option
-                            ? 'bg-emerald-600 text-white border-emerald-600 shadow-md'
-                            : 'bg-white text-gray-700 border-gray-300 hover:bg-emerald-50 hover:border-emerald-300'
-                        }`}
-                    >
-                        {option}
-                    </button>
-                    ))}
-                </div>
+                <div key={q.key} className="space-y-3">
+                  <p className="font-display font-semibold text-gray-700">{q.text}</p>
+                  <div className="flex flex-col sm:flex-row flex-wrap gap-2">
+                      {q.options.map(option => (
+                      <button
+                          key={option}
+                          onClick={() => handleAnswer(q.key, option)}
+                          className={`w-full sm:w-auto text-left sm:text-center px-4 py-3 text-sm rounded-lg border transition-all duration-200 ${
+                          answers[q.key] === option
+                              ? 'bg-emerald-600 text-white border-emerald-600 shadow-md'
+                              : 'bg-white text-gray-700 border-gray-300 hover:bg-emerald-50 hover:border-emerald-300'
+                          }`}
+                      >
+                          {option}
+                      </button>
+                      ))}
+                  </div>
+                  <input
+                    type="text"
+                    value={customAnswers[q.key] || ''}
+                    onChange={(e) => handleCustomAnswerChange(q.key, e.target.value)}
+                    placeholder="or describe it yourself..."
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 transition"
+                    disabled={isLoading}
+                  />
                 </div>
             ))}
-             <div>
-                <p className="font-display font-semibold text-gray-700 mb-3">Optionally, add more details.</p>
-                <textarea
-                  value={freeText}
-                  onChange={(e) => setFreeText(e.target.value)}
-                  placeholder="Describe your physical and mental traits in your own words..."
-                  className="w-full h-24 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 transition bg-white"
-                  disabled={isLoading}
-                />
-            </div>
             <button
                 onClick={handleSubmit}
                 disabled={isLoading || !isComplete}
@@ -115,7 +124,7 @@ export const DoshaIdentifier: React.FC<DoshaIdentifierProps> = ({ personalizatio
         <div className="animate-fade-in">
           <DoshaResult result={result} cart={cart} onAddToCart={onAddToCart} onTalkToDoctorClick={onTalkToDoctorClick} />
           <button
-            onClick={() => { setResult(null); setAnswers({}); setFreeText(''); }}
+            onClick={() => { setResult(null); setAnswers({}); setCustomAnswers({}); }}
             className="mt-6 w-full text-center text-emerald-600 hover:text-emerald-800 font-semibold"
           >
             Start Over

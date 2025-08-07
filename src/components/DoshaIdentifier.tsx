@@ -26,9 +26,10 @@ interface DoshaIdentifierProps {
   personalizationData: PersonalizationData;
   cart: HerbSuggestion[];
   onAddToCart: (item: HerbSuggestion) => void;
+  onTalkToDoctorClick: () => void;
 }
 
-export const DoshaIdentifier: React.FC<DoshaIdentifierProps> = ({ personalizationData, cart, onAddToCart }) => {
+export const DoshaIdentifier: React.FC<DoshaIdentifierProps> = ({ personalizationData, cart, onAddToCart, onTalkToDoctorClick }) => {
   const [answers, setAnswers] = useState<Record<string, Answer>>({});
   const [freeText, setFreeText] = useState('');
   const [result, setResult] = useState<DoshaAnalysisResult | null>(null);
@@ -112,7 +113,7 @@ export const DoshaIdentifier: React.FC<DoshaIdentifierProps> = ({ personalizatio
       
       {result && (
         <div className="animate-fade-in">
-          <DoshaResult result={result} cart={cart} onAddToCart={onAddToCart} />
+          <DoshaResult result={result} cart={cart} onAddToCart={onAddToCart} onTalkToDoctorClick={onTalkToDoctorClick} />
           <button
             onClick={() => { setResult(null); setAnswers({}); setFreeText(''); }}
             className="mt-6 w-full text-center text-emerald-600 hover:text-emerald-800 font-semibold"

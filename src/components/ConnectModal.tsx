@@ -1,10 +1,11 @@
-import React, { useState, useCallback } from 'react';
-import { contactExpert } from '../services/geminiService';
+import React, { useState } from 'react';
 import type { ContactDetails } from '../types';
-import { Spinner } from './Spinner';
 import { XIcon } from './icons/XIcon';
 import { SendIcon } from './icons/SendIcon';
-import { CheckCircleIcon } from './icons/CheckCircleIcon';
+import { WhatsAppIcon } from './icons/WhatsAppIcon';
+
+// TODO: **IMPORTANT** Replace this with your actual WhatsApp business number.
+const WHATSAPP_NUMBER = '919953603959'; // Example for India. Use your own number.
 
 interface ConnectModalProps {
   onClose: () => void;
@@ -12,7 +13,6 @@ interface ConnectModalProps {
 
 export const ConnectModal: React.FC<ConnectModalProps> = ({ onClose }) => {
   const [details, setDetails] = useState<ContactDetails>({ name: '', email: '', phone: '' });
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
@@ -20,24 +20,22 @@ export const ConnectModal: React.FC<ConnectModalProps> = ({ onClose }) => {
     setDetails({ ...details, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!details.name || !details.email || !details.phone) {
         setError("Please fill in all fields.");
         return;
     }
     setError(null);
-    setIsLoading(true);
 
-    try {
-      const response = await contactExpert(details);
-      setSuccessMessage(response.message);
-    } catch (err: any) {
-      setError(err.message || 'An unknown error occurred. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [details]);
+    const message = `Hello! I would like to request an expert consultation from AyurConnect AI.\n\n*Name:*\n${details.name}\n\n*Email:*\n${details.email}\n\n*Phone:*\n${details.phone}`;
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`;
+    
+    window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+    
+    setSuccessMessage("You are being redirected to WhatsApp. Please send the pre-filled message to confirm your request.");
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex justify-center items-center p-4 transition-opacity" aria-modal="true" role="dialog">
@@ -60,8 +58,8 @@ export const ConnectModal: React.FC<ConnectModalProps> = ({ onClose }) => {
           <div className="p-6 sm:p-8">
             {successMessage ? (
               <div className="text-center space-y-4 py-8">
-                <CheckCircleIcon className="w-16 h-16 text-emerald-500 mx-auto" />
-                <h2 className="font-display text-2xl font-bold text-gray-800">Request Sent!</h2>
+                <WhatsAppIcon className="w-16 h-16 text-emerald-500 mx-auto" />
+                <h2 className="font-display text-2xl font-bold text-gray-800">Redirecting...</h2>
                 <p className="text-gray-600">{successMessage}</p>
                 <button
                   onClick={onClose}
@@ -88,8 +86,8 @@ export const ConnectModal: React.FC<ConnectModalProps> = ({ onClose }) => {
                     <input type="tel" name="phone" id="phone" value={details.phone} onChange={handleChange} required className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400"/>
                   </div>
                   {error && <p className="text-red-600 text-sm">{error}</p>}
-                  <button type="submit" disabled={isLoading} className="w-full flex items-center justify-center px-6 py-3 bg-emerald-600 text-white font-bold rounded-full hover:bg-emerald-700 disabled:bg-gray-400 transition-all duration-200 shadow-lg hover:shadow-xl disabled:shadow-none">
-                    {isLoading ? <Spinner /> : <><SendIcon className="w-5 h-5 mr-2" /> Submit Request</>}
+                  <button type="submit" className="w-full flex items-center justify-center px-6 py-3 bg-emerald-600 text-white font-bold rounded-full hover:bg-emerald-700 disabled:bg-gray-400 transition-all duration-200 shadow-lg hover:shadow-xl disabled:shadow-none">
+                    <SendIcon className="w-5 h-5 mr-2" /> Submit Request
                   </button>
                 </form>
               </>

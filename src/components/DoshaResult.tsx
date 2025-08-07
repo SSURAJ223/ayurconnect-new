@@ -4,14 +4,16 @@ import { LeafIcon } from './icons/LeafIcon';
 import { BookOpenIcon } from './icons/BookOpenIcon';
 import { SparklesIcon } from './icons/SparklesIcon';
 import { ResultCard } from './ResultCard';
+import { ConsultationCTA } from './ConsultationCTA';
 
 interface DoshaResultProps {
   result: DoshaAnalysisResult;
   cart: HerbSuggestion[];
   onAddToCart: (item: HerbSuggestion) => void;
+  onTalkToDoctorClick: () => void;
 }
 
-export const DoshaResult: React.FC<DoshaResultProps> = ({ result, cart, onAddToCart }) => {
+export const DoshaResult: React.FC<DoshaResultProps> = ({ result, cart, onAddToCart, onTalkToDoctorClick }) => {
   return (
     <div className="bg-gradient-to-br from-emerald-50 to-green-50 p-5 sm:p-6 rounded-2xl border border-green-200 animate-fade-in space-y-6">
       <div>
@@ -54,6 +56,8 @@ export const DoshaResult: React.FC<DoshaResultProps> = ({ result, cart, onAddToC
           </div>
         </div>
       )}
+
+      <ConsultationCTA onTalkToDoctorClick={onTalkToDoctorClick} />
 
       {result.sources && result.sources.length > 0 && (
          <div className="pt-4">

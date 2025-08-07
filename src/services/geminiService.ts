@@ -48,10 +48,11 @@ export async function analyzeLabReport(input: LabInput, personalization: Persona
   });
 }
 
-export async function identifyDosha(answers: Record<string, string>, personalization: PersonalizationData): Promise<DoshaAnalysisResult> {
+export async function identifyDosha(answers: Record<string, string>, freeText: string, personalization: PersonalizationData): Promise<DoshaAnalysisResult> {
   return fetchFromApi('/api/gemini', {
     type: 'dosha',
     answers,
+    freeText,
     personalization,
   });
 }

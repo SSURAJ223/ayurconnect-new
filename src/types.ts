@@ -34,6 +34,7 @@ export interface DoshaAnalysisResult {
   recommendations: {
     diet: string[];
     lifestyle: string[];
+    herbSuggestions: HerbSuggestion[];
   };
   sources: string[];
 }

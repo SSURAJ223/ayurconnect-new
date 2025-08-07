@@ -6,6 +6,7 @@ import { Spinner } from './Spinner';
 import { SearchIcon } from './icons/SearchIcon';
 import { LifestyleCard } from './LifestyleCard';
 import { ShareButton } from './ShareButton';
+import { ConsultationCTA } from './ConsultationCTA';
 
 const formatMedicineResultForSharing = (result: MedicineAnalysisResult): string => {
   if (!result) return '';
@@ -36,9 +37,10 @@ interface MedicineFinderProps {
   personalizationData: PersonalizationData;
   cart: HerbSuggestion[];
   onAddToCart: (item: HerbSuggestion) => void;
+  onTalkToDoctorClick: () => void;
 }
 
-export const MedicineFinder: React.FC<MedicineFinderProps> = ({ personalizationData, cart, onAddToCart }) => {
+export const MedicineFinder: React.FC<MedicineFinderProps> = ({ personalizationData, cart, onAddToCart, onTalkToDoctorClick }) => {
   const [medicineName, setMedicineName] = useState<string>('');
   const [result, setResult] = useState<MedicineAnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -140,6 +142,7 @@ export const MedicineFinder: React.FC<MedicineFinderProps> = ({ personalizationD
             </div>
           )}
 
+          <ConsultationCTA onTalkToDoctorClick={onTalkToDoctorClick} />
         </div>
       )}
     </div>

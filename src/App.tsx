@@ -48,7 +48,7 @@ const App: React.FC = () => {
       case 'lab':
         return <LabAnalyzer personalizationData={personalizationData} cart={cart} onAddToCart={handleAddToCart} />;
       case 'dosha':
-        return <DoshaIdentifier personalizationData={personalizationData} />;
+        return <DoshaIdentifier personalizationData={personalizationData} cart={cart} onAddToCart={handleAddToCart} />;
       default:
         return <MedicineFinder personalizationData={personalizationData} cart={cart} onAddToCart={handleAddToCart} />;
     }
@@ -61,7 +61,7 @@ const App: React.FC = () => {
       case 'lab':
         return { title: 'Lab Analyzer', icon: <ReportIcon className="w-8 h-8 mr-3 text-emerald-600" /> };
       case 'dosha':
-        return { title: 'Dosha Identifier', icon: <DoshaIcon className="w-8 h-8 mr-3 text-emerald-600" /> };
+        return { title: "What's Your Dosha?", icon: <DoshaIcon className="w-8 h-8 mr-3 text-emerald-600" /> };
     }
   }
 
@@ -94,8 +94,8 @@ const App: React.FC = () => {
               onClick={() => setActiveView('lab')}
             />
              <NavCard
-              title="Dosha Identifier"
-              description="Discover your constitution."
+              title="What's Your Dosha?"
+              description="Discover your mind-body type."
               icon={<DoshaIcon className="w-8 h-8" />}
               isActive={activeView === 'dosha'}
               onClick={() => setActiveView('dosha')}

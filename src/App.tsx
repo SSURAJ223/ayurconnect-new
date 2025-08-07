@@ -44,13 +44,13 @@ const App: React.FC = () => {
   const renderActiveView = () => {
     switch (activeView) {
       case 'medicine':
-        return <MedicineFinder personalizationData={personalizationData} cart={cart} onAddToCart={handleAddToCart} />;
+        return <MedicineFinder personalizationData={personalizationData} cart={cart} onAddToCart={handleAddToCart} onTalkToDoctorClick={handleTalkToDoctorClick} />;
       case 'lab':
-        return <LabAnalyzer personalizationData={personalizationData} cart={cart} onAddToCart={handleAddToCart} />;
+        return <LabAnalyzer personalizationData={personalizationData} cart={cart} onAddToCart={handleAddToCart} onTalkToDoctorClick={handleTalkToDoctorClick} />;
       case 'dosha':
-        return <DoshaIdentifier personalizationData={personalizationData} cart={cart} onAddToCart={handleAddToCart} />;
+        return <DoshaIdentifier personalizationData={personalizationData} cart={cart} onAddToCart={handleAddToCart} onTalkToDoctorClick={handleTalkToDoctorClick} />;
       default:
-        return <MedicineFinder personalizationData={personalizationData} cart={cart} onAddToCart={handleAddToCart} />;
+        return <MedicineFinder personalizationData={personalizationData} cart={cart} onAddToCart={handleAddToCart} onTalkToDoctorClick={handleTalkToDoctorClick} />;
     }
   };
 

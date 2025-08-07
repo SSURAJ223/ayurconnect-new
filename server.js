@@ -270,8 +270,7 @@ Your task is to provide personalized complementary suggestions. Follow these ins
         } else if (type === 'dosha') {
             const prompt = `You are an expert Ayurvedic practitioner whose knowledge is strictly derived from classical texts like the Charaka Samhita and Sushruta Samhita. Based on the following user inputs, identify their dominant Prakriti (dosha).
 
-User's questionnaire answers: ${JSON.stringify(data.answers, null, 2)}
-User's self-description (optional): "${data.freeText || 'Not provided'}"
+User's questionnaire answers (this includes a mix of pre-defined choices and their own written answers): ${JSON.stringify(data.answers, null, 2)}
 User's context: Age: ${data.personalization?.age || 'Not provided'}, Gender: ${data.personalization?.gender || 'Not provided'}, Known Allergies/Symptoms: "${data.personalization?.context || 'None'}".
 
 Your task is to:

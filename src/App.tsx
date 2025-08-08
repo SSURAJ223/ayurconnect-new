@@ -1,8 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, lazy, Suspense } from 'react';
 import { Header } from './components/Header';
-import { MedicineFinder } from './components/MedicineFinder';
-import { LabAnalyzer } from './components/LabAnalyzer';
-import { DoshaIdentifier } from './components/DoshaIdentifier';
 import { NavCard } from './components/NavCard';
 import type { PersonalizationData, HerbSuggestion } from './types';
 import { PersonalizationForm } from './components/PersonalizationForm';
@@ -14,7 +11,11 @@ import { DoshaIcon } from './components/icons/DoshaIcon';
 import { AppSummary } from './components/AppSummary';
 import { CartFAB } from './components/CartFAB';
 import { CartModal } from './components/CartModal';
+import { PageLoader } from './components/PageLoader';
 
+const MedicineFinder = lazy(() => import('./components/MedicineFinder').then(m => ({ default: m.MedicineFinder })));
+const LabAnalyzer = lazy(() => import('./components/LabAnalyzer').then(m => ({ default: m.LabAnalyzer })));
+const DoshaIdentifier = lazy(() => import('./components/DoshaIdentifier').then(m => ({ default: m.DoshaIdentifier })));
 
 type ActiveView = 'medicine' | 'lab' | 'dosha';
 
@@ -109,7 +110,9 @@ const App: React.FC = () => {
                 {icon}
                 <h2 className="font-display text-2xl md:text-3xl font-bold text-gray-800">{title}</h2>
               </div>
-              {renderActiveView()}
+              <Suspense fallback={<PageLoader />}>
+                {renderActiveView()}
+              </Suspense>
             </div>
           </div>
         </div>

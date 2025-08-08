@@ -40,14 +40,14 @@
         to { opacity: 1; transform: translateY(0); }
       }
     </style>
-  <script type="importmap">
+<script type="importmap">
 {
   "imports": {
     "vite": "https://esm.sh/vite@^7.1.1",
-    "react/": "https://esm.sh/react@^19.1.1/",
+    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.0.0",
     "react": "https://esm.sh/react@^19.1.1",
     "react-dom/": "https://esm.sh/react-dom@^19.1.1/",
-    "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.0.0"
+    "react/": "https://esm.sh/react@^19.1.1/"
   }
 }
 </script>

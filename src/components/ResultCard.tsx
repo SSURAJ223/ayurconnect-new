@@ -1,3 +1,4 @@
+
 import React from 'react';
 import type { HerbSuggestion } from '../types';
 import { LeafIcon } from './icons/LeafIcon';
@@ -31,7 +32,7 @@ export const ResultCard: React.FC<ResultCardProps> = ({ suggestion, cart, onAddT
           <div className="bg-emerald-100 p-2 rounded-full mr-3 flex-shrink-0">
             <LeafIcon className="w-5 h-5 text-emerald-600" />
           </div>
-          <h4 className="font-display text-lg font-bold text-emerald-800 break-words">{suggestion.name}</h4>
+          <h4 className="font-display text-lg font-bold text-emerald-800 flex-1">{suggestion.name}</h4>
         </div>
 
         <p className="text-gray-600 mb-5 text-sm">{suggestion.summary}</p>

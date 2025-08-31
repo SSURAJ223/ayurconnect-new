@@ -1,3 +1,4 @@
+
 export interface HerbSuggestion {
   id: string;
   name: string;
@@ -49,4 +50,9 @@ export interface ContactDetails {
     name: string;
     phone: string;
     email: string;
+}
+
+export interface LoginDetails {
+  email: string;
+  phone: string;
 }

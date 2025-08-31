@@ -1,5 +1,9 @@
-import React, { useState, lazy, Suspense } from 'react';
+
+import React, { useState } from 'react';
 import { Header } from './components/Header';
+import { MedicineFinder } from './components/MedicineFinder';
+import { LabAnalyzer } from './components/LabAnalyzer';
+import { DoshaIdentifier } from './components/DoshaIdentifier';
 import { NavCard } from './components/NavCard';
 import type { PersonalizationData, HerbSuggestion } from './types';
 import { PersonalizationForm } from './components/PersonalizationForm';
@@ -11,11 +15,7 @@ import { DoshaIcon } from './components/icons/DoshaIcon';
 import { AppSummary } from './components/AppSummary';
 import { CartFAB } from './components/CartFAB';
 import { CartModal } from './components/CartModal';
-import { PageLoader } from './components/PageLoader';
-
-const MedicineFinder = lazy(() => import('./components/MedicineFinder').then(m => ({ default: m.MedicineFinder })));
-const LabAnalyzer = lazy(() => import('./components/LabAnalyzer').then(m => ({ default: m.LabAnalyzer })));
-const DoshaIdentifier = lazy(() => import('./components/DoshaIdentifier').then(m => ({ default: m.DoshaIdentifier })));
+import { LoginModal } from './components/LoginModal';
 
 type ActiveView = 'medicine' | 'lab' | 'dosha';
 
@@ -30,6 +30,18 @@ const App: React.FC = () => {
   const [cart, setCart] = useState<HerbSuggestion[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
 
+  // New state for authentication and login modal
+  const [isAuthenticated, setIsAuthenticated] = useState(() => !!sessionStorage.getItem('isAuthenticated'));
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+
+  const handleLoginSuccess = () => {
+    setIsAuthenticated(true);
+    sessionStorage.setItem('isAuthenticated', 'true');
+    setIsLoginModalOpen(false);
+  };
+
+  const openLoginModal = () => setIsLoginModalOpen(true);
+
   const handleAddToCart = (item: HerbSuggestion) => {
       if (!cart.some(cartItem => cartItem.id === item.id)) {
         setCart(prev => [...prev, item]);
@@ -43,15 +55,23 @@ const App: React.FC = () => {
   const handleTalkToDoctorClick = () => setIsConnectModalOpen(true);
 
   const renderActiveView = () => {
+    const commonProps = {
+      personalizationData,
+      cart,
+      onAddToCart: handleAddToCart,
+      onTalkToDoctorClick: handleTalkToDoctorClick,
+      isAuthenticated,
+      openLoginModal,
+    };
     switch (activeView) {
       case 'medicine':
-        return <MedicineFinder personalizationData={personalizationData} cart={cart} onAddToCart={handleAddToCart} onTalkToDoctorClick={handleTalkToDoctorClick} />;
+        return <MedicineFinder {...commonProps} />;
       case 'lab':
-        return <LabAnalyzer personalizationData={personalizationData} cart={cart} onAddToCart={handleAddToCart} onTalkToDoctorClick={handleTalkToDoctorClick} />;
+        return <LabAnalyzer {...commonProps} />;
       case 'dosha':
-        return <DoshaIdentifier personalizationData={personalizationData} cart={cart} onAddToCart={handleAddToCart} onTalkToDoctorClick={handleTalkToDoctorClick} />;
+        return <DoshaIdentifier {...commonProps} />;
       default:
-        return <MedicineFinder personalizationData={personalizationData} cart={cart} onAddToCart={handleAddToCart} onTalkToDoctorClick={handleTalkToDoctorClick} />;
+        return <MedicineFinder {...commonProps} />;
     }
   };
 
@@ -110,9 +130,7 @@ const App: React.FC = () => {
                 {icon}
                 <h2 className="font-display text-2xl md:text-3xl font-bold text-gray-800">{title}</h2>
               </div>
-              <Suspense fallback={<PageLoader />}>
-                {renderActiveView()}
-              </Suspense>
+              {renderActiveView()}
             </div>
           </div>
         </div>
@@ -139,6 +157,11 @@ const App: React.FC = () => {
         onClose={() => setIsCartOpen(false)}
         cartItems={cart}
         onRemoveItem={handleRemoveFromCart}
+      />
+      <LoginModal 
+        isOpen={isLoginModalOpen}
+        onClose={() => setIsLoginModalOpen(false)}
+        onSuccess={handleLoginSuccess}
       />
     </div>
   );

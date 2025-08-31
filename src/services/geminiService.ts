@@ -1,4 +1,5 @@
-import type { MedicineAnalysisResult, LabAnalysisResult, DoshaAnalysisResult, PersonalizationData, ContactDetails } from '../types';
+
+import type { MedicineAnalysisResult, LabAnalysisResult, DoshaAnalysisResult, PersonalizationData, ContactDetails, LoginDetails } from '../types';
 
 interface LabInput {
   text?: string;
@@ -58,4 +59,12 @@ export async function identifyDosha(answers: Record<string, string>, personaliza
 
 export async function contactExpert(details: ContactDetails): Promise<{ message: string }> {
   return fetchFromApi('/api/contact', details);
+}
+
+export async function sendOtp(details: LoginDetails): Promise<{ message: string }> {
+    return fetchFromApi('/api/send-otp', details);
+}
+
+export async function verifyOtp(email: string, otp: string): Promise<{ success: boolean }> {
+    return fetchFromApi('/api/verify-otp', { email, otp });
 }

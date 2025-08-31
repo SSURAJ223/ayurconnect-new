@@ -1,9 +1,11 @@
-import React, { useState, useCallback } from 'react';
+
+import React, { useState, useCallback, useEffect } from 'react';
 import { identifyDosha } from '../services/geminiService';
 import type { DoshaAnalysisResult, PersonalizationData, HerbSuggestion } from '../types';
 import { Spinner } from './Spinner';
 import { DoshaResult } from './DoshaResult';
 import { DoshaIcon } from './icons/DoshaIcon';
+import { LoginGate } from './LoginGate';
 
 type Answer = string | null;
 
@@ -27,14 +29,24 @@ interface DoshaIdentifierProps {
   cart: HerbSuggestion[];
   onAddToCart: (item: HerbSuggestion) => void;
   onTalkToDoctorClick: () => void;
+  isAuthenticated: boolean;
+  openLoginModal: () => void;
 }
 
-export const DoshaIdentifier: React.FC<DoshaIdentifierProps> = ({ personalizationData, cart, onAddToCart, onTalkToDoctorClick }) => {
+export const DoshaIdentifier: React.FC<DoshaIdentifierProps> = ({ personalizationData, cart, onAddToCart, onTalkToDoctorClick, isAuthenticated, openLoginModal }) => {
   const [answers, setAnswers] = useState<Record<string, Answer>>({});
   const [customAnswers, setCustomAnswers] = useState<Record<string, string>>({});
   const [result, setResult] = useState<DoshaAnalysisResult | null>(null);
+  const [pendingResult, setPendingResult] = useState<DoshaAnalysisResult | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isAuthenticated && pendingResult) {
+        setResult(pendingResult);
+        setPendingResult(null);
+    }
+  }, [isAuthenticated, pendingResult]);
 
   const handleAnswer = (key: string, option: string) => {
     setAnswers(prev => ({ ...prev, [key]: option }));
@@ -46,7 +58,7 @@ export const DoshaIdentifier: React.FC<DoshaIdentifierProps> = ({ personalizatio
     setAnswers(prev => ({...prev, [key]: null})); // Clear button answer
   }
 
-  const isComplete = questions.every(q => !!answers[q.key] || !!customAnswers[q.key]);
+  const isComplete = questions.every(q => !!answers[q.key] || (customAnswers[q.key] || '').trim() !== '');
 
   const handleSubmit = useCallback(async () => {
     if (!isComplete) {
@@ -56,6 +68,7 @@ export const DoshaIdentifier: React.FC<DoshaIdentifierProps> = ({ personalizatio
     setIsLoading(true);
     setError(null);
     setResult(null);
+    setPendingResult(null);
 
     const combinedAnswers = questions.reduce((acc, q) => {
       acc[q.key] = customAnswers[q.key] || answers[q.key] || '';
@@ -64,73 +77,87 @@ export const DoshaIdentifier: React.FC<DoshaIdentifierProps> = ({ personalizatio
 
     try {
       const analysis = await identifyDosha(combinedAnswers, personalizationData);
-      setResult(analysis);
+      if (isAuthenticated) {
+        setResult(analysis);
+      } else {
+        setPendingResult(analysis);
+      }
     } catch (err) {
       setError('Failed to identify your Dosha. Please try again later.');
       console.error(err);
     } finally {
       setIsLoading(false);
     }
-  }, [answers, customAnswers, isComplete, personalizationData]);
+  }, [answers, customAnswers, isComplete, personalizationData, isAuthenticated]);
 
-  return (
-    <div className="space-y-6">
-       {!result && (
-        <div className="space-y-8">
-            <p className="text-gray-600 mt-1">Answer a few questions to discover your dominant Dosha and get personalized wellness tips.</p>
-            {questions.map((q) => (
-                <div key={q.key} className="space-y-3">
-                  <p className="font-display font-semibold text-gray-700">{q.text}</p>
-                  <div className="flex flex-col sm:flex-row flex-wrap gap-2">
-                      {q.options.map(option => (
-                      <button
-                          key={option}
-                          onClick={() => handleAnswer(q.key, option)}
-                          className={`w-full sm:w-auto text-left sm:text-center px-4 py-3 text-sm rounded-lg border transition-all duration-200 ${
-                          answers[q.key] === option
-                              ? 'bg-emerald-600 text-white border-emerald-600 shadow-md'
-                              : 'bg-white text-gray-700 border-gray-300 hover:bg-emerald-50 hover:border-emerald-300'
-                          }`}
-                      >
-                          {option}
-                      </button>
-                      ))}
-                  </div>
-                  <input
-                    type="text"
-                    value={customAnswers[q.key] || ''}
-                    onChange={(e) => handleCustomAnswerChange(q.key, e.target.value)}
-                    placeholder="or describe it yourself..."
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 transition"
-                    disabled={isLoading}
-                  />
-                </div>
-            ))}
-            <button
-                onClick={handleSubmit}
-                disabled={isLoading || !isComplete}
-                className="w-full flex items-center justify-center px-6 py-3 bg-emerald-600 text-white font-bold rounded-full hover:bg-emerald-700 disabled:bg-gray-400 transition-all duration-200 shadow-lg hover:shadow-xl disabled:shadow-none"
-            >
-                {isLoading ? <Spinner /> : <><DoshaIcon className="w-5 h-5 mr-2" />Find My Dosha</>}
-            </button>
-        </div>
-      )}
-      
-      {error && <div className="text-red-600 bg-red-100 p-3 rounded-lg">{error}</div>}
-      
-      {isLoading && <div className="text-center p-4"><p className="text-emerald-700 font-semibold">Analyzing your constitution...</p></div>}
-      
-      {result && (
+  const renderContent = () => {
+    if (isLoading) {
+      return <div className="text-center p-4"><p className="text-emerald-700 font-semibold">Analyzing your constitution...</p></div>;
+    }
+    if (result) {
+       return (
         <div className="animate-fade-in">
           <DoshaResult result={result} cart={cart} onAddToCart={onAddToCart} onTalkToDoctorClick={onTalkToDoctorClick} />
           <button
-            onClick={() => { setResult(null); setAnswers({}); setCustomAnswers({}); }}
+            onClick={() => { setResult(null); setPendingResult(null); setAnswers({}); setCustomAnswers({}); }}
             className="mt-6 w-full text-center text-emerald-600 hover:text-emerald-800 font-semibold"
           >
             Start Over
           </button>
         </div>
-      )}
+      );
+    }
+    if (pendingResult) {
+      return <LoginGate openLoginModal={openLoginModal} />;
+    }
+
+    // Default: Show questionnaire
+    return (
+      <div className="space-y-8">
+          <p className="text-gray-600 mt-1">Answer a few questions to discover your dominant Dosha and get personalized wellness tips.</p>
+          {questions.map((q) => (
+              <div key={q.key} className="space-y-3">
+                <p className="font-display font-semibold text-gray-700">{q.text}</p>
+                <div className="flex flex-col sm:flex-row flex-wrap gap-2">
+                    {q.options.map(option => (
+                    <button
+                        key={option}
+                        onClick={() => handleAnswer(q.key, option)}
+                        className={`w-full sm:w-auto text-left sm:text-center px-4 py-3 text-sm rounded-lg border transition-all duration-200 ${
+                        answers[q.key] === option
+                            ? 'bg-emerald-600 text-white border-emerald-600 shadow-md'
+                            : 'bg-white text-gray-700 border-gray-300 hover:bg-emerald-50 hover:border-emerald-300'
+                        }`}
+                    >
+                        {option}
+                    </button>
+                    ))}
+                </div>
+                <input
+                  type="text"
+                  value={customAnswers[q.key] || ''}
+                  onChange={(e) => handleCustomAnswerChange(q.key, e.target.value)}
+                  placeholder="or describe it yourself..."
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 transition"
+                  disabled={isLoading}
+                />
+              </div>
+          ))}
+          <button
+              onClick={handleSubmit}
+              disabled={isLoading || !isComplete}
+              className="w-full flex items-center justify-center px-6 py-3 bg-emerald-600 text-white font-bold rounded-full hover:bg-emerald-700 disabled:bg-gray-400 transition-all duration-200 shadow-lg hover:shadow-xl disabled:shadow-none"
+          >
+              {isLoading ? <Spinner /> : <><DoshaIcon className="w-5 h-5 mr-2" />Find My Dosha</>}
+          </button>
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      {error && <div className="text-red-600 bg-red-100 p-3 rounded-lg mb-4">{error}</div>}
+      {renderContent()}
     </div>
   );
 };

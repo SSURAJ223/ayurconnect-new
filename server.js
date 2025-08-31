@@ -323,13 +323,18 @@ app.use(express.static(path.join(__dirname, 'dist')));
 // The "catchall" handler: for any request that doesn't match one above,
 // send back the index.html file from the 'dist' directory.
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'), (err) => {
+  const indexPath = path.join(__dirname, 'dist', 'index.html');
+  res.sendFile(indexPath, (err) => {
     if (err) {
-      res.status(500).send(err);
+      console.error('Error sending index.html:', err);
+      res.status(500).send('Could not load the application. This can happen if the build process failed.');
     }
   });
 });
 
 app.listen(port, () => {
-  console.log(`Server listening on port ${port}`);
+  console.log(`Server listening successfully on port ${port}`);
+}).on('error', (err) => {
+    console.error('Failed to start server:', err);
+    process.exit(1);
 });

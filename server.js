@@ -53,7 +53,12 @@ async function saveToGoogleSheet(data) {
         await doc.loadInfo();
         const sheet = doc.sheetsByIndex[0]; // Assumes the first sheet
         
-        // Ensure headers match your Google Sheet
+        // This makes the setup more robust. If the sheet is empty, it will create the header row.
+        if (!sheet.headerValues || sheet.headerValues.length === 0) {
+            console.log('Sheet is empty. Setting header row to: Timestamp, Email, WhatsAppNumber');
+            await sheet.setHeaderRow(['Timestamp', 'Email', 'WhatsAppNumber']);
+        }
+
         await sheet.addRow({
             Timestamp: new Date().toISOString(),
             Email: data.email,

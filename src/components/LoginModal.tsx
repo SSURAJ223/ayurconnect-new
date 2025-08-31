@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import type { LoginDetails } from '../types';
 import { sendOtp, verifyOtp } from '../services/geminiService';
@@ -15,6 +14,8 @@ interface LoginModalProps {
 
 type LoginStep = 'details' | 'otp';
 
+const RESEND_COOLDOWN_SECONDS = 30;
+
 export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSuccess }) => {
   const [step, setStep] = useState<LoginStep>('details');
   const [details, setDetails] = useState<LoginDetails>({ email: '', phone: '' });
@@ -22,6 +23,15 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  // Timer effect for resend cooldown
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const timerId = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
+      return () => clearTimeout(timerId);
+    }
+  }, [resendCooldown]);
 
   useEffect(() => {
     // Reset state when modal is opened/closed
@@ -33,25 +43,18 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
         setError(null);
         setMessage(null);
         setIsLoading(false);
+        setResendCooldown(0);
       }, 300); // Wait for closing animation
     }
   }, [isOpen]);
 
   const handleDetailsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    if (name === 'phone') {
-      // Allow only numbers and limit to 10 digits
-      const numericValue = value.replace(/[^0-9]/g, '');
-      if (numericValue.length <= 10) {
-        setDetails(prev => ({ ...prev, phone: numericValue }));
-      }
-    } else {
-      setDetails(prev => ({ ...prev, [name]: value }));
-    }
+    setDetails(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSendOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSendOtp = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (!details.email || !details.phone) {
       setError("Please fill in all fields.");
       return;
@@ -63,11 +66,17 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
       const response = await sendOtp(details);
       setMessage(response.message);
       setStep('otp');
+      setResendCooldown(RESEND_COOLDOWN_SECONDS);
     } catch (err) {
       setError((err as Error).message || 'Failed to send OTP. Please try again.');
     } finally {
       setIsLoading(false);
     }
+  };
+  
+  const handleResendOtp = async () => {
+    if (resendCooldown > 0) return;
+    await handleSendOtp();
   };
 
   const handleVerifyOtp = async (e: React.FormEvent) => {
@@ -104,32 +113,24 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
           
           {step === 'details' && (
             <>
-              <p className="text-gray-600 mb-6 text-sm">Enter your details to receive a one-time password (OTP) via SMS.</p>
+              <p className="text-gray-600 mb-6 text-sm">Enter your details to receive a one-time password (OTP) via email.</p>
               <form onSubmit={handleSendOtp} className="space-y-4">
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email Address</label>
                   <input type="email" name="email" id="email" value={details.email} onChange={handleDetailsChange} required className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400"/>
                 </div>
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Mobile Number (India)</label>
-                   <div className="mt-1 flex rounded-lg shadow-sm">
-                        <span className="inline-flex items-center px-3 rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
-                            +91
-                        </span>
-                        <input 
-                            type="tel" 
-                            name="phone" 
-                            id="phone" 
-                            value={details.phone} 
-                            onChange={handleDetailsChange} 
-                            required 
-                            pattern="\d{10}"
-                            title="Please enter a valid 10-digit mobile number"
-                            maxLength={10}
-                            placeholder="9876543210"
-                            className="w-full flex-1 min-w-0 block px-4 py-2 border border-gray-300 rounded-none rounded-r-lg focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400"
-                        />
-                    </div>
+                  <label htmlFor="phone" className="block text-sm font-medium text-gray-700">WhatsApp Number</label>
+                  <input 
+                      type="tel" 
+                      name="phone" 
+                      id="phone" 
+                      value={details.phone} 
+                      onChange={handleDetailsChange} 
+                      required 
+                      placeholder="e.g., +919876543210"
+                      className="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400"
+                  />
                 </div>
                 <button type="submit" disabled={isLoading} className="w-full flex items-center justify-center px-6 py-3 bg-emerald-600 text-white font-bold rounded-full hover:bg-emerald-700 disabled:bg-gray-400 transition-all duration-200 shadow-lg hover:shadow-xl disabled:shadow-none">
                   {isLoading ? <Spinner /> : <><SendIcon className="w-5 h-5 mr-2" /> Send OTP</>}
@@ -141,19 +142,22 @@ export const LoginModal: React.FC<LoginModalProps> = ({ isOpen, onClose, onSucce
           {step === 'otp' && (
              <>
               <p className="text-gray-600 mb-6 text-sm">
-                An OTP has been sent via SMS to <span className="font-bold">+91 {details.phone}</span>. Please enter it below.
-                <br />
-                <span className="text-xs">(An email with the OTP has also been sent as a backup.)</span>
+                An OTP has been sent to <span className="font-bold">{details.email}</span>. Please enter it below.
               </p>
               <form onSubmit={handleVerifyOtp} className="space-y-4">
                 <div>
                   <label htmlFor="otp" className="block text-sm font-medium text-gray-700">One-Time Password (OTP)</label>
                   <input type="text" inputMode="numeric" pattern="\d{6}" maxLength={6} name="otp" id="otp" value={otp} onChange={(e) => setOtp(e.target.value)} required className="mt-1 w-full text-center tracking-[0.5em] font-bold text-xl px-4 py-2 border border-gray-300 rounded-lg focus:ring-1 focus:ring-emerald-400 focus:border-emerald-400"/>
                 </div>
+                <div className="flex items-center justify-between gap-4">
+                  <button type="button" onClick={() => setStep('details')} className="text-sm text-gray-500 hover:text-emerald-600">Back</button>
+                  <button type="button" onClick={handleResendOtp} disabled={resendCooldown > 0 || isLoading} className="text-sm font-medium text-emerald-600 hover:text-emerald-800 disabled:text-gray-400 disabled:cursor-not-allowed">
+                    {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend OTP'}
+                  </button>
+                </div>
                 <button type="submit" disabled={isLoading} className="w-full flex items-center justify-center px-6 py-3 bg-emerald-600 text-white font-bold rounded-full hover:bg-emerald-700 disabled:bg-gray-400 transition-all duration-200 shadow-lg hover:shadow-xl disabled:shadow-none">
                    {isLoading ? <Spinner /> : <><CheckCircleIcon className="w-5 h-5 mr-2" /> Verify & Continue</>}
                 </button>
-                <button type="button" onClick={() => setStep('details')} className="w-full text-sm text-gray-500 hover:text-emerald-600 text-center">Back</button>
               </form>
             </>
           )}

@@ -27,11 +27,11 @@ export const ResultCard: React.FC<ResultCardProps> = ({ suggestion, cart, onAddT
   return (
     <div className="border border-green-200/80 bg-white rounded-xl shadow-md overflow-hidden h-full flex flex-col">
       <div className="p-5 flex-grow">
-        <div className="flex items-center mb-3">
-          <div className="bg-emerald-100 p-2 rounded-full mr-3">
+        <div className="flex items-start mb-3">
+          <div className="bg-emerald-100 p-2 rounded-full mr-3 flex-shrink-0">
             <LeafIcon className="w-5 h-5 text-emerald-600" />
           </div>
-          <h4 className="font-display text-lg font-bold text-emerald-800">{suggestion.name}</h4>
+          <h4 className="font-display text-lg font-bold text-emerald-800 break-words">{suggestion.name}</h4>
         </div>
 
         <p className="text-gray-600 mb-5 text-sm">{suggestion.summary}</p>

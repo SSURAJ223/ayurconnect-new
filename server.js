@@ -1,3 +1,4 @@
+
 const express = require('express');
 const path = require('path');
 const { GoogleGenAI, Type } = require("@google/genai");
@@ -53,21 +54,33 @@ async function saveToGoogleSheet(data) {
         await doc.loadInfo();
         const sheet = doc.sheetsByIndex[0]; // Assumes the first sheet
         
-        // FIX: Load the header row from the sheet before trying to access headerValues.
-        // This was the cause of the "Header values are not yet loaded" error.
+        // More robust logic to handle empty sheets and prevent race conditions.
         await sheet.loadHeaderRow();
-        
-        // This check now works as intended. If the sheet is empty, `headerValues` will be empty.
-        if (!sheet.headerValues || sheet.headerValues.length === 0) {
-            console.log('Sheet is empty. Setting header row to: Timestamp, Email, WhatsAppNumber');
-            await sheet.setHeaderRow(['Timestamp', 'Email', 'WhatsAppNumber']);
-        }
 
-        await sheet.addRow({
+        const rowData = {
             Timestamp: new Date().toISOString(),
             Email: data.email,
             WhatsAppNumber: data.phone,
-        });
+        };
+        const expectedHeaders = ['Timestamp', 'Email', 'WhatsAppNumber'];
+        
+        // Check if the headers are missing or incorrect.
+        const hasCorrectHeaders = sheet.headerValues && expectedHeaders.every(h => sheet.headerValues.includes(h));
+
+        if (!hasCorrectHeaders) {
+            console.log('Sheet is empty or has incorrect headers. Setting headers and adding first row.');
+            // Set the headers
+            await sheet.setHeaderRow(expectedHeaders);
+            
+            // Add the first row of data using an array. This is more direct and avoids race conditions
+            // where the library state isn't updated immediately after setHeaderRow.
+            const rowValues = expectedHeaders.map(header => rowData[header]);
+            await sheet.addRow(rowValues);
+        } else {
+            // Headers already exist, so we can safely add the row using the object.
+            await sheet.addRow(rowData);
+        }
+
         console.log('--- USER DATA SAVED to Google Sheet ---');
 
     } catch (error) {

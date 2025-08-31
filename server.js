@@ -53,7 +53,11 @@ async function saveToGoogleSheet(data) {
         await doc.loadInfo();
         const sheet = doc.sheetsByIndex[0]; // Assumes the first sheet
         
-        // This makes the setup more robust. If the sheet is empty, it will create the header row.
+        // FIX: Load the header row from the sheet before trying to access headerValues.
+        // This was the cause of the "Header values are not yet loaded" error.
+        await sheet.loadHeaderRow();
+        
+        // This check now works as intended. If the sheet is empty, `headerValues` will be empty.
         if (!sheet.headerValues || sheet.headerValues.length === 0) {
             console.log('Sheet is empty. Setting header row to: Timestamp, Email, WhatsAppNumber');
             await sheet.setHeaderRow(['Timestamp', 'Email', 'WhatsAppNumber']);

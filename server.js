@@ -1,10 +1,11 @@
-
 const express = require('express');
 const path = require('path');
 const { GoogleGenAI, Type } = require("@google/genai");
 const crypto = require('crypto');
 const cors = require('cors');
 const nodemailer = require('nodemailer');
+const { GoogleSpreadsheet } = require('google-spreadsheet');
+const { JWT } = require('google-auth-library');
 
 // This server will run in a secure environment where process.env.API_KEY is set.
 if (!process.env.API_KEY) {
@@ -26,6 +27,46 @@ const otpStore = {};
 
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
+
+// --- Start of Google Sheet Logic ---
+async function saveToGoogleSheet(data) {
+    if (!process.env.GOOGLE_SHEET_ID || !process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || !process.env.GOOGLE_PRIVATE_KEY) {
+        console.warn('Google Sheets environment variables not set. Skipping save to sheet.');
+        // Log locally as a fallback
+        console.log(`--- NEW USER DATA (would be in Google Sheet) ---`);
+        console.log(`Timestamp: ${new Date().toISOString()}`);
+        console.log(`Email: ${data.email}`);
+        console.log(`WhatsApp Number: ${data.phone}`);
+        console.log('-------------------------------------------');
+        return;
+    }
+    
+    try {
+        const serviceAccountAuth = new JWT({
+            email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
+            // Handle escaped newlines in the private key
+            key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+            scopes: ['https://www.googleapis.com/auth/spreadsheets'],
+        });
+
+        const doc = new GoogleSpreadsheet(process.env.GOOGLE_SHEET_ID, serviceAccountAuth);
+        await doc.loadInfo();
+        const sheet = doc.sheetsByIndex[0]; // Assumes the first sheet
+        
+        // Ensure headers match your Google Sheet
+        await sheet.addRow({
+            Timestamp: new Date().toISOString(),
+            Email: data.email,
+            WhatsAppNumber: data.phone,
+        });
+        console.log('--- USER DATA SAVED to Google Sheet ---');
+
+    } catch (error) {
+        console.error('Error saving to Google Sheet:', error.message);
+    }
+}
+// --- End of Google Sheet Logic ---
+
 
 // --- Start of Email Logic ---
 const transporter = nodemailer.createTransport({
@@ -55,23 +96,19 @@ if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
 app.post('/api/send-otp', async (req, res) => {
     const { email, phone } = req.body;
     if (!email || !phone) {
-        return res.status(400).json({ error: 'Email and mobile number are required.' });
+        return res.status(400).json({ error: 'Email and WhatsApp number are required.' });
     }
-
-    // Basic validation for a 10-digit Indian mobile number
-    const phoneRegex = /^\d{10}$/;
-    if (!phoneRegex.test(phone)) {
-        return res.status(400).json({ error: 'Please enter a valid 10-digit Indian mobile number.' });
-    }
+    
+    // Save user details to Google Sheet
+    await saveToGoogleSheet({ email, phone });
 
     const otp = crypto.randomInt(100000, 999999).toString();
     otpStore[email] = { otp, timestamp: Date.now() };
 
     console.log('--- NEW USER REGISTRATION ATTEMPT ---');
     console.log(`Email: ${email}`);
-    console.log(`Phone: +91${phone}`);
-    console.log(`(This data would be saved to a Google Sheet)`);
-    console.log(`OTP for ${email} is ${otp}. Simulating sending SMS to +91${phone}...`);
+    console.log(`WhatsApp Number: ${phone}`);
+    console.log(`Generated OTP for ${email} is ${otp}.`);
 
     if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
         console.warn(`--- OTP EMAIL NOT SENT (credentials not configured) --- OTP for ${email} is ${otp}`);
@@ -82,11 +119,11 @@ app.post('/api/send-otp', async (req, res) => {
         from: `"AyurConnect AI" <${process.env.EMAIL_USER}>`,
         to: email,
         subject: 'Your AyurConnect AI Verification Code',
-        text: `Your verification code is: ${otp}\n\nThis code will expire in 5 minutes. If you did not receive an SMS, you can use this code.`,
+        text: `Your verification code is: ${otp}\n\nThis code will expire in 5 minutes.`,
         html: `
             <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
                 <h2 style="color: #047857;">Your Verification Code</h2>
-                <p>Please use the following code to complete your verification. If you did not receive an SMS, you can use this code.</p>
+                <p>Please use the following code to complete your verification.</p>
                 <p style="font-size: 24px; font-weight: bold; color: #047857; letter-spacing: 2px;">${otp}</p>
                 <p>This code will expire in 5 minutes.</p>
                 <hr style="border: 0; border-top: 1px solid #ddd;">
@@ -97,8 +134,8 @@ app.post('/api/send-otp', async (req, res) => {
 
     try {
         await transporter.sendMail(mailOptions);
-        console.log(`--- OTP EMAIL SENT (as backup) --- To: ${email}`);
-        res.status(200).json({ message: 'An OTP has been sent to your mobile number via SMS.' });
+        console.log(`--- OTP EMAIL SENT --- To: ${email}`);
+        res.status(200).json({ message: 'An OTP has been sent to your email address.' });
     } catch (error) {
         console.error("Error sending OTP email:", error);
         res.status(500).json({ error: 'There was a problem sending the OTP. Please try again later.' });

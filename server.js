@@ -1,6 +1,8 @@
+
 const express = require('express');
 const path = require('path');
 const { GoogleGenAI, Type } = require("@google/genai");
+const crypto = require('crypto');
 const cors = require('cors');
 const nodemailer = require('nodemailer');
 
@@ -11,30 +13,31 @@ if (!process.env.API_KEY) {
 
 // Check for email credentials. If not present, the contact form will only log to the console.
 if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.warn("Email credentials (EMAIL_USER, EMAIL_PASS) are not set. Contact form will not send live emails.");
+    console.warn("Email credentials (EMAIL_USER, EMAIL_PASS) are not set. Contact form and OTP emails will not be sent live.");
 }
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 const app = express();
 const port = process.env.PORT || 10000;
 
+// In-memory store for OTPs. In a production environment, use a more persistent store like Redis.
+// Format: { "user@example.com": { otp: "123456", timestamp: 167... } }
+const otpStore = {};
+
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 
 // --- Start of Email Logic ---
-// Create a Nodemailer transporter using SMTP.
-// It's assumed a secure environment where these env vars are set (e.g., using a service like Gmail with an App Password).
 const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST || 'smtp.gmail.com', // Default to Gmail SMTP
+    host: process.env.EMAIL_HOST || 'smtp.gmail.com',
     port: parseInt(process.env.EMAIL_PORT, 10) || 587,
-    secure: (parseInt(process.env.EMAIL_PORT, 10) || 587) === 465, // true for 465, false for other ports
+    secure: (parseInt(process.env.EMAIL_PORT, 10) || 587) === 465,
     auth: {
-        user: process.env.EMAIL_USER, // The sending email address
-        pass: process.env.EMAIL_PASS, // The app-specific password for the sending email account
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
     },
 });
 
-// Verify transporter configuration on startup if credentials are provided
 if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
     transporter.verify(function (error, success) {
         if (error) {
@@ -47,6 +50,90 @@ if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
 // --- End of Email Logic ---
 
 // --- Start of API Logic ---
+
+// Endpoint for sending OTP
+app.post('/api/send-otp', async (req, res) => {
+    const { email, phone } = req.body;
+    if (!email || !phone) {
+        return res.status(400).json({ error: 'Email and mobile number are required.' });
+    }
+
+    // Basic validation for a 10-digit Indian mobile number
+    const phoneRegex = /^\d{10}$/;
+    if (!phoneRegex.test(phone)) {
+        return res.status(400).json({ error: 'Please enter a valid 10-digit Indian mobile number.' });
+    }
+
+    const otp = crypto.randomInt(100000, 999999).toString();
+    otpStore[email] = { otp, timestamp: Date.now() };
+
+    console.log('--- NEW USER REGISTRATION ATTEMPT ---');
+    console.log(`Email: ${email}`);
+    console.log(`Phone: +91${phone}`);
+    console.log(`(This data would be saved to a Google Sheet)`);
+    console.log(`OTP for ${email} is ${otp}. Simulating sending SMS to +91${phone}...`);
+
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+        console.warn(`--- OTP EMAIL NOT SENT (credentials not configured) --- OTP for ${email} is ${otp}`);
+        return res.status(200).json({ message: 'OTP generated. Check server logs for value.' });
+    }
+    
+    const mailOptions = {
+        from: `"AyurConnect AI" <${process.env.EMAIL_USER}>`,
+        to: email,
+        subject: 'Your AyurConnect AI Verification Code',
+        text: `Your verification code is: ${otp}\n\nThis code will expire in 5 minutes. If you did not receive an SMS, you can use this code.`,
+        html: `
+            <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+                <h2 style="color: #047857;">Your Verification Code</h2>
+                <p>Please use the following code to complete your verification. If you did not receive an SMS, you can use this code.</p>
+                <p style="font-size: 24px; font-weight: bold; color: #047857; letter-spacing: 2px;">${otp}</p>
+                <p>This code will expire in 5 minutes.</p>
+                <hr style="border: 0; border-top: 1px solid #ddd;">
+                <p>If you did not request this code, you can safely ignore this email.</p>
+            </div>
+        `,
+    };
+
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`--- OTP EMAIL SENT (as backup) --- To: ${email}`);
+        res.status(200).json({ message: 'An OTP has been sent to your mobile number via SMS.' });
+    } catch (error) {
+        console.error("Error sending OTP email:", error);
+        res.status(500).json({ error: 'There was a problem sending the OTP. Please try again later.' });
+    }
+});
+
+// Endpoint for verifying OTP
+app.post('/api/verify-otp', (req, res) => {
+    const { email, otp } = req.body;
+    if (!email || !otp) {
+        return res.status(400).json({ error: 'Email and OTP are required.' });
+    }
+
+    const storedOtpData = otpStore[email];
+    const OTP_EXPIRATION_MS = 5 * 60 * 1000; // 5 minutes
+
+    if (!storedOtpData) {
+        return res.status(400).json({ error: 'Invalid email or OTP has expired.' });
+    }
+
+    const isExpired = (Date.now() - storedOtpData.timestamp) > OTP_EXPIRATION_MS;
+    if (isExpired) {
+        delete otpStore[email];
+        return res.status(400).json({ error: 'OTP has expired. Please request a new one.' });
+    }
+
+    if (storedOtpData.otp === otp) {
+        delete otpStore[email]; // OTP is single-use
+        console.log(`--- USER VERIFIED --- Email: ${email}`);
+        return res.status(200).json({ success: true, message: 'Verification successful.' });
+    } else {
+        return res.status(400).json({ error: 'Invalid OTP.' });
+    }
+});
+
 
 // Endpoint for handling contact requests
 app.post('/api/contact', async (req, res) => {

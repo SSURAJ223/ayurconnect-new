@@ -16,6 +16,8 @@ import { AppSummary } from './components/AppSummary';
 import { CartFAB } from './components/CartFAB';
 import { CartModal } from './components/CartModal';
 import { LoginModal } from './components/LoginModal';
+import { ContactStrip } from './components/ContactStrip';
+import { PrivacyPledge } from './components/PrivacyPledge';
 
 type ActiveView = 'medicine' | 'lab' | 'dosha';
 
@@ -94,6 +96,7 @@ const App: React.FC = () => {
       
       <main className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
         <AppSummary />
+        <PrivacyPledge />
         <PersonalizationForm data={personalizationData} setData={setPersonalizationData} />
 
         <div className="flex flex-col lg:flex-row gap-8">
@@ -134,6 +137,8 @@ const App: React.FC = () => {
             </div>
           </div>
         </div>
+        
+        <ContactStrip />
 
       </main>
       

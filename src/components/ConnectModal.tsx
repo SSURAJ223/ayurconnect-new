@@ -1,11 +1,11 @@
+
 import React, { useState } from 'react';
 import type { ContactDetails } from '../types';
 import { XIcon } from './icons/XIcon';
 import { SendIcon } from './icons/SendIcon';
 import { WhatsAppIcon } from './icons/WhatsAppIcon';
 
-// TODO: **IMPORTANT** Replace this with your actual WhatsApp business number, including the country code without the '+'.
-const WHATSAPP_NUMBER = '918248197406'; // Example for India. Use your own number.
+const WHATSAPP_NUMBER = '918248197406';
 
 interface ConnectModalProps {
   onClose: () => void;

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import type { HerbSuggestion } from '../types';
 import { XIcon } from './icons/XIcon';
@@ -12,8 +13,7 @@ interface CartModalProps {
   onRemoveItem: (itemId: string) => void;
 }
 
-// TODO: **IMPORTANT** Replace this with your actual WhatsApp business number, including the country code without the '+'.
-const WHATSAPP_NUMBER = '918248197406'; // Example for India. Use your own number.
+const WHATSAPP_NUMBER = '918248197406';
 
 export const CartModal: React.FC<CartModalProps> = ({ isOpen, onClose, cartItems, onRemoveItem }) => {
   if (!isOpen) return null;

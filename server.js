@@ -1,7 +1,7 @@
 
 const express = require('express');
 const path = require('path');
-const { GoogleGenAI, Type } = require("@google/ai");
+const { GoogleGenAI, Type } = require("@google/genai");
 const crypto = require('crypto');
 const cors = require('cors');
 const nodemailer = require('nodemailer');

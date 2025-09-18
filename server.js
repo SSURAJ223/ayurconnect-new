@@ -1,7 +1,7 @@
 
 const express = require('express');
 const path = require('path');
-const { GoogleGenAI, Type } = require("@google/genai");
+const { GoogleGenAI, Type } = require("@google/ai");
 const crypto = require('crypto');
 const cors = require('cors');
 const nodemailer = require('nodemailer');
@@ -389,7 +389,7 @@ Your task is to provide personalized complementary suggestions. Follow these ins
             const response = await ai.models.generateContent({
                 model: "gemini-2.5-flash",
                 contents: prompt,
-                config: { responseMimeType: "application/json", responseSchema: medicineSchema, seed: 42, temperature: 0 },
+                config: { responseMimeType: "application/json", responseSchema: medicineSchema, seed: 42, temperature: 0, topK: 1 },
             });
             res.status(200).json(JSON.parse(response.text));
 
@@ -416,7 +416,7 @@ Follow these instructions carefully:
             const response = await ai.models.generateContent({
                 model: "gemini-2.5-flash",
                 contents: { parts },
-                config: { responseMimeType: "application/json", responseSchema: labReportSchema, systemInstruction, seed: 42, temperature: 0 },
+                config: { responseMimeType: "application/json", responseSchema: labReportSchema, systemInstruction, seed: 42, temperature: 0, topK: 1 },
             });
 
             const responseText = response.text.trim();
@@ -444,7 +444,7 @@ Your task is to:
             const response = await ai.models.generateContent({
                 model: "gemini-2.5-flash",
                 contents: prompt,
-                config: { responseMimeType: "application/json", responseSchema: doshaSchema, seed: 42, temperature: 0 },
+                config: { responseMimeType: "application/json", responseSchema: doshaSchema, seed: 42, temperature: 0, topK: 1 },
             });
             res.status(200).json(JSON.parse(response.text));
 

@@ -389,7 +389,7 @@ Your task is to provide personalized complementary suggestions. Follow these ins
             const response = await ai.models.generateContent({
                 model: "gemini-2.5-flash",
                 contents: prompt,
-                config: { responseMimeType: "application/json", responseSchema: medicineSchema, seed: 42 },
+                config: { responseMimeType: "application/json", responseSchema: medicineSchema, seed: 42, temperature: 0 },
             });
             res.status(200).json(JSON.parse(response.text));
 
@@ -416,7 +416,7 @@ Follow these instructions carefully:
             const response = await ai.models.generateContent({
                 model: "gemini-2.5-flash",
                 contents: { parts },
-                config: { responseMimeType: "application/json", responseSchema: labReportSchema, systemInstruction, seed: 42 },
+                config: { responseMimeType: "application/json", responseSchema: labReportSchema, systemInstruction, seed: 42, temperature: 0 },
             });
 
             const responseText = response.text.trim();
@@ -444,7 +444,7 @@ Your task is to:
             const response = await ai.models.generateContent({
                 model: "gemini-2.5-flash",
                 contents: prompt,
-                config: { responseMimeType: "application/json", responseSchema: doshaSchema, seed: 42 },
+                config: { responseMimeType: "application/json", responseSchema: doshaSchema, seed: 42, temperature: 0 },
             });
             res.status(200).json(JSON.parse(response.text));
 

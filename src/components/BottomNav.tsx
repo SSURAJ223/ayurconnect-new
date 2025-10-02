@@ -24,9 +24,9 @@ const NavItem: React.FC<{
         aria-current={isActive ? 'page' : undefined}
     >
         {React.cloneElement(icon, {
-            className: `w-6 h-6 mb-1 transition-all duration-200 ease-in-out ${isActive ? 'text-emerald-400' : 'text-gray-400 group-hover:text-white'}`
+            className: `w-6 h-6 mb-1 transition-all duration-200 ease-in-out ${isActive ? 'text-yellow-400' : 'text-gray-300 group-hover:text-white'}`
         })}
-        <span className={`text-xs tracking-wide transition-colors ${isActive ? 'font-bold text-emerald-400' : 'text-gray-400 group-hover:text-white'}`}>
+        <span className={`text-xs tracking-wide transition-colors ${isActive ? 'font-bold text-white' : 'text-gray-300 group-hover:text-white'}`}>
             {label}
         </span>
     </button>

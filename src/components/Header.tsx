@@ -10,12 +10,13 @@ const logoUrl = "/logo.png";
 
 export const Header: React.FC<HeaderProps> = ({ onTalkToDoctorClick }) => {
     return (
-        <header className="bg-white/80 backdrop-blur-sm sticky top-0 z-20 shadow-md">
+        <header className="bg-white/95 border-b border-gray-200">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex items-center justify-between h-32">
+                <div className="flex items-center justify-between h-24">
                     <div className="flex-shrink-0">
-                        {/* The logo image now contains the brand name, so the separate text span has been removed for a cleaner look. */}
-                        <img className="h-28 w-auto" src={logoUrl} alt="AyurConnect AI Logo" />
+                        <a href="/" aria-label="Back to home">
+                            <img className="h-20 w-auto" src={logoUrl} alt="AyurConnect AI Logo" />
+                        </a>
                     </div>
                     <div className="hidden lg:block">
                         <button

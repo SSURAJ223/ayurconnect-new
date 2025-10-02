@@ -20,13 +20,13 @@ const NavItem: React.FC<{
 }> = ({ icon, label, isActive, onClick }) => (
     <button 
         onClick={onClick} 
-        className="flex flex-col items-center justify-center w-full h-full text-center group transition-colors duration-200 ease-in-out focus:outline-none focus:bg-gray-800"
+        className={`flex flex-col items-center justify-center w-full h-full text-center group transition-colors duration-200 ease-in-out focus:outline-none focus:bg-emerald-900 ${isActive ? 'bg-emerald-700/50' : ''}`}
         aria-current={isActive ? 'page' : undefined}
     >
         {React.cloneElement(icon, {
-            className: `w-6 h-6 mb-1 transition-all duration-200 ease-in-out ${isActive ? 'text-yellow-400' : 'text-gray-300 group-hover:text-white'}`
+            className: `w-6 h-6 mb-1 transition-all duration-200 ease-in-out ${isActive ? 'text-yellow-400' : 'text-emerald-200 group-hover:text-white'}`
         })}
-        <span className={`text-xs tracking-wide transition-colors ${isActive ? 'font-bold text-white' : 'text-gray-300 group-hover:text-white'}`}>
+        <span className={`text-xs tracking-wide transition-colors ${isActive ? 'font-bold text-white' : 'text-emerald-200 group-hover:text-white'}`}>
             {label}
         </span>
     </button>
@@ -35,8 +35,8 @@ const NavItem: React.FC<{
 
 export const BottomNav: React.FC<BottomNavProps> = ({ activeView, setActiveView, onTalkToDoctorClick }) => {
     return (
-        <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-20 bg-gray-900 border-t border-gray-700 shadow-[0_-2px_10px_rgba(0,0,0,0.2)] z-30">
-            <div className="grid grid-cols-4 h-full max-w-md mx-auto">
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-20 bg-emerald-800 border-t border-emerald-600 shadow-[0_-2px_10px_rgba(0,0,0,0.2)] z-30">
+            <div className="grid grid-cols-4 h-full">
                 <NavItem 
                     icon={<MedicineIcon />} 
                     label="Medicine" 

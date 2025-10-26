@@ -114,7 +114,7 @@ export const DoshaIdentifier: React.FC<DoshaIdentifierProps> = ({ personalizatio
     // Default: Show questionnaire
     return (
       <div className="space-y-8">
-          <p className="text-gray-600 mt-1">Answer a few questions to discover your dominant Dosha and get personalized wellness tips.</p>
+          <p className="text-gray-600 mt-1">Discover your unique mind-body type (Prakriti). Answering these questions helps our AI provide personalized Ayurvedic lifestyle and diet recommendations for optimal balance.</p>
           {questions.map((q) => (
               <div key={q.key} className="space-y-3">
                 <p className="font-display font-semibold text-gray-700">{q.text}</p>

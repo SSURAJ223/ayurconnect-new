@@ -238,7 +238,7 @@ export const LabAnalyzer: React.FC<LabAnalyzerProps> = ({ personalizationData, c
 
   return (
     <div className="space-y-6">
-      <p className="text-gray-600 mt-1">Paste your lab report data or upload an image/PDF to get insights and Ayurvedic suggestions.</p>
+      <p className="text-gray-600 mt-1">Upload your lab report for an AI Ayurveda consultation. Get insights on managing imbalances and receive personalized herb suggestions for your wellness journey.</p>
       
       <form onSubmit={handleSubmit} className="space-y-4">
         <textarea

@@ -1,7 +1,6 @@
-
 {
   "name": "AyurConnect AI",
-  "description": "An AI-powered web application that bridges allopathic medicine and Ayurvedic wisdom. Get insights on your medications and lab reports, and discover complementary Ayurvedic herbs to support your wellness journey.",
+  "description": "AyurConnect AI bridges Ayurveda and modern medicine, offering personalized Ayurvedic recovery herbs and guidance to help you heal deeper after allopathic treatments. Discover root-cause healing with our AI Ayurveda consultation.",
   "requestFramePermissions": [
     "camera"
   ],

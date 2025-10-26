@@ -153,7 +153,7 @@ export const MedicineFinder: React.FC<MedicineFinderProps> = ({ personalizationD
     <div className="space-y-6">
       <div>
         <p className="text-gray-600 mt-1">
-          Enter an allopathic medicine or molecule name to discover Ayurvedic herbs that can support your treatment.
+          Enter an allopathic medicine to discover complementary Ayurvedic recovery herbs. Find natural support to manage side effects and promote root-cause healing during your treatment.
         </p>
       </div>
       <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row items-center gap-3">
